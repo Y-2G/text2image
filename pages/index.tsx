@@ -16,23 +16,23 @@ export default function Home() {
   )
 }
 
-const MIN_X = 220;
-const MAX_X = 1700;
-const MIN_Y = 200;
-const MAX_Y = 0;
-
-const TEXT_MARGIN = 1.2;
-
 const ASPECT_WIDTH = 1920;
 const ASPECT_HEIGHT = 1080;
 
-type settings = {
-  font: string,
-  color: string,
-  outline: string,
-  size: number,
-  height: number,
-  align: string
+const MIN_X = 220;
+const MAX_X = 1700;
+const MIN_Y = 200;
+const MAX_Y = 880;
+
+const TEXT_MARGIN = 1.2;
+
+class TextSettings {
+  font: string = '';
+  color: string = '';
+  outline: string = '';
+  align: string = '';
+  size: number = 0;
+  height: number = 0;
 }
 
 const Container = () => {
@@ -47,29 +47,20 @@ const Container = () => {
   useEffect( () => { renderImgList(); }, [ pngList ] );
 
   const initialize = () => {
-    const wrapper: any = document.querySelector( `.${styles.canvas_wrapper}` );
-
     const canvas: any = document.getElementById('canvas');
 
-    canvas.width = wrapper.clientWidth;
-
-    canvas.height = wrapper.clientHeight;
-    // canvas.height = canvas.width * ASPECT_RATIO;
+    // アスペクト比を固定するためにCSSで16:9にした要素からサイズを取得する
+    canvas.width = canvas.parentNode.clientWidth;
+    
+    canvas.height = canvas.parentNode.clientHeight;
     
     const canvasContext = canvas.getContext('2d');
 
     setContext(canvasContext);
   }
 
-  const divideTextSettings = (type) : settings => {
-    const result: settings = {
-      font: '',
-      color: '',
-      outline: '',
-      size: 0,
-      height: 0,
-      align: ''
-    };
+  const divideTextSettings = (type) : TextSettings => {
+    const result: TextSettings = new TextSettings();
 
     switch ( type ) {
       case 'N':
@@ -111,23 +102,30 @@ const Container = () => {
 
   const renderText = ( type, text ) => {
     if( context === null || text === '' ) return;
-    const scale = window.innerWidth / ASPECT_WIDTH;
 
     const canvas: any = document.getElementById('canvas');
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect( 0, 0, canvas.width, canvas.height );
+
+    const scale = window.innerWidth / ASPECT_WIDTH;
 
     const settings = divideTextSettings(type);
 
+    const startX = MIN_X * scale;
+    const startY = MIN_Y * scale;
+    const fontSize = settings.size * scale;
+    const maxX = ( MAX_X * scale ) - startX;
+    const maxY = ( MAX_Y * scale ) - startY;
+
     // 文字オプションを設定する
-    context.font = `${settings.size * scale}px ${settings.font}`;
+    context.font = `${ fontSize }px ${ settings.font }`;
     context.fillStyle = settings.color;
     context.textAlign = settings.align;
     context.textBaseline = 'top';
 
     // アウトラインを設定する
     context.strokeStyle = settings.outline;
-    context.lineWidth = 3 * scale;
+    context.lineWidth = 3;
 
     // ドロップシャドウを設定する
     context.shadowColor = settings.outline;
@@ -137,19 +135,20 @@ const Container = () => {
 
     let str = '';
 
-    let x = MIN_X, y = MIN_Y;
+    let x = startX;
+    let y = startY;
     
     for( let i = 0; i < text.length; i++ ) {
       const mesure = context.measureText( str + text.charAt( i ) );
-      if( mesure.width + (MIN_X * scale) > (MAX_X * scale)) {
+      if( mesure.width > maxX ) {
         str = '';
-        y += settings.size * settings.height;
+        y += fontSize * settings.height;
       }
 
       str += text.charAt( i );
 
-      context.strokeText( str, x * scale, y * scale );
-      context.fillText( str, x * scale, y * scale );
+      context.strokeText( str, x, y );
+      context.fillText( str, x, y );
     }
    
     y += settings.size * ( settings.height * TEXT_MARGIN );
@@ -164,10 +163,10 @@ const Container = () => {
 
     let s = 0;
 
-    for(let i = 0; i < passage.length; i++) {
+    for( let i = 0; i < passage.length; i++ ) {
       if( regExp.test( passage.charAt( i ) ) === false ) continue
 
-      if(s >= i) continue;
+      if( s >= i ) continue;
 
       result.push( { [ passage.slice( s, s + 1 ) ] : passage.slice( s + 2, i ).split( '\n' ).filter( e => e !== '' ) } );
 
@@ -184,12 +183,12 @@ const Container = () => {
 
     const reader = new FileReader();
     
-    reader.readAsText(files[0]);
+    reader.readAsText( files[ 0 ] );
     
     reader.onload = () => {
       const passage: string = reader.result.toString();
 
-      const result: any = adjustPassage(passage);
+      const result: any = adjustPassage( passage );
 
       test(result)
     }
@@ -202,8 +201,8 @@ const Container = () => {
 
     for( const e of passage ) {
       for( const k of Object.keys( e ) ) {
-        const arr: [] = e[k];
-        arr.forEach( e => list.push( renderText(k, e) ) );
+        const arr: [] = e[ k ];
+        arr.forEach( e => list.push( renderText( k, e ) ) );
       }
     }
 
@@ -219,36 +218,37 @@ const Container = () => {
     const folder = zip.folder( folderName );
 
     for( let i = 0; i < pngList.length; i++ ) {
-      folder.file( `test_${ i }.png`, toBlob(pngList[ i ]) );
+      folder.file( `test_${ i }.png`, toBlob( pngList[ i ] ) );
     }
 
     zip.generateAsync( { type: 'blob' } ).then( blob => {
-
       const url = URL.createObjectURL( blob );
       
       const link = document.createElement( 'a' );
       link.href = url;
-      link.download = `${folderName}.zip`;
+      link.download = `${ folderName }.zip`;
 
       link.click();
-
     } );
   }
 
-  const toBlob = (base64) => {
-    var bin = atob(base64.replace(/^.*,/, ''));
-    var buffer = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) {
-        buffer[i] = bin.charCodeAt(i);
+  const toBlob = ( base64 ) => {
+    let blob = null;
+
+    let bin = atob( base64.replace( /^.*,/, '' ) );
+    let buffer = new Uint8Array( bin.length );
+    for ( let i = 0; i < bin.length; i++ ) {
+        buffer[ i ] = bin.charCodeAt( i );
     }
     // Blobを作成
     try{
-        var blob = new Blob([buffer.buffer], {
-            type: 'image/png'
+        blob = new Blob( [ buffer.buffer ], {
+          type: 'image/png'
         });
     }catch (e){
-        return null;
+        return blob;
     }
+
     return blob;
   }
   
