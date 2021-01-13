@@ -1,0 +1,14 @@
+.form {
+    width: 100%;
+    margin: 24px 0;
+}
+
+.preview img {
+    width: 20%;
+}
+
+@media screen and (max-width: 900px) {
+    .preview img {
+        width: 33.3333%;
+    }
+}

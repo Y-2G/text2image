@@ -2,6 +2,8 @@ import React, {useState,useEffect} from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
+import JSZip from 'jszip'
+
 export default function Home() {
   return (
     <div className={ styles.container }>
@@ -14,10 +16,14 @@ export default function Home() {
   )
 }
 
-const MIN_X = 0;
-const MAX_X = 500;
+const MIN_X = 220;
+const MAX_X = 1700;
+const MIN_Y = 200;
+const MAX_Y = 0;
 
 const TEXT_MARGIN = 1.2;
+
+const data = [];
 
 type settings = {
   font: string,
@@ -32,13 +38,16 @@ const Container = () => {
   // contextを状態として持つ
   const [ context, setContext ] = useState( null );
 
+  const [ pngList, setPngList ] = useState( null );
+
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
   useEffect( () => { initialize(); }, [] );
 
-  // 状態にコンテキストが登録されたらそれに対して操作できる
-  // useEffect( () => { renderText(); }, [ context ] );
+  useEffect( () => { renderImgList(); }, [ pngList ] );
 
   const initialize = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
     const canvas: any = document.getElementById('canvas');
 
     const canvasContext = canvas.getContext('2d');
@@ -58,10 +67,10 @@ const Container = () => {
 
     switch ( type ) {
       case 'N':
-        result.font  = 'ヒラギノ丸ゴ Pro W4';
+        result.font  = 'ヒラギノ明朝 Pro W4';
         result.color = '#FFF';
         result.outline = '#000';
-        result.size  = 30;
+        result.size  = 65;
         result.height = 1.1618;
         result.align = 'left';
         break;
@@ -69,23 +78,23 @@ const Container = () => {
         result.font  = 'ヒラギノ丸ゴ Pro W4';
         result.color = '#FFF';
         result.outline = '#08003F';
-        result.size  = 50;
+        result.size  = 80;
         result.height = 1;
         result.align = 'left';
         break;
       case 'B':
         result.font  = 'ヒラギノ丸ゴ Pro W4';
         result.color = '#FFF';
-        result.outline = 'red';
-        result.size  = 50;
+        result.outline = '#570001';
+        result.size  = 80;
         result.height = 1;
         result.align = 'left';
         break;
       case 'C':
         result.font  = 'ヒラギノ丸ゴ Pro W4';
         result.color = '#FFF';
-        result.outline = 'green';
-        result.size  = 50;
+        result.outline = '#4A5700';
+        result.size  = 80;
         result.height = 1;
         result.align = 'left';
         break;
@@ -96,8 +105,6 @@ const Container = () => {
 
   const renderText = ( type, text ) => {
     if( context === null || text === '' ) return;
-
-    console.log(text)
 
     const canvas: any = document.getElementById('canvas');
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -122,12 +129,11 @@ const Container = () => {
 
     let str = '';
 
-    let y = 0;
-    let x = 0;
+    let x = MIN_X, y = MIN_Y;
     
     for( let i = 0; i < text.length; i++ ) {
       const mesure = context.measureText( str + text.charAt( i ) );
-      if( mesure.width > MAX_X ) {
+      if( mesure.width + MIN_X > MAX_X ) {
         str = '';
         y += settings.size * settings.height;
       }
@@ -139,8 +145,8 @@ const Container = () => {
     }
    
     y += settings.size * ( settings.height * TEXT_MARGIN );
-  
-    download();
+    
+    return canvas.toDataURL('image/png');
   }
 
   const adjustPassage = ( passage: string ): object[] => {
@@ -155,7 +161,7 @@ const Container = () => {
 
       if(s >= i) continue;
 
-      result.push( { [ passage.slice( s, s + 1 ) ] : passage.slice( s + 2, i ).split('\n') } );
+      result.push( { [ passage.slice( s, s + 1 ) ] : passage.slice( s + 2, i ).split( '\n' ).filter( e => e !== '' ) } );
 
       s = i;
     }
@@ -184,29 +190,89 @@ const Container = () => {
   const test = (passage) => {
     if( passage === null ) return;
 
+    const list = [];
+
     for( const e of passage ) {
       for( const k of Object.keys( e ) ) {
         const arr: [] = e[k];
-        arr.forEach( e => renderText(k, e) );
+        arr.forEach( e => list.push( renderText(k, e) ) );
       }
+    }
+
+    setPngList( list );
+  }
+
+  const downloadAll = () => {
+    if( pngList === null ) return;
+
+    const zip = new JSZip();
+
+    const folderName = 'test';
+    const folder = zip.folder( folderName );
+
+    for( let i = 0; i < pngList.length; i++ ) {
+      folder.file( `test_${ i }.png`, toBlob(pngList[ i ]) );
+    }
+
+    zip.generateAsync( { type: 'blob' } ).then( blob => {
+
+      const url = URL.createObjectURL( blob );
+      
+      const link = document.createElement( 'a' );
+      link.href = url;
+      link.download = `${folderName}.zip`;
+
+      link.click();
+
+    } );
+  }
+
+  const toBlob = (base64) => {
+    var bin = atob(base64.replace(/^.*,/, ''));
+    var buffer = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) {
+        buffer[i] = bin.charCodeAt(i);
+    }
+    // Blobを作成
+    try{
+        var blob = new Blob([buffer.buffer], {
+            type: 'image/png'
+        });
+    }catch (e){
+        return null;
+    }
+    return blob;
+  }
+  
+  const download = () => {
+    for( let i = 0; i < pngList.length; i++ ) {
+      const link = document.createElement('a');
+      link.href = pngList[i];
+      link.download = `test_${i}.png`;
+      link.click();
     }
   }
 
-  const download = () => {
-    const canvas: any = document.getElementById('canvas');
-    
-    const link = document.createElement('a');
-    link.href = canvas.toDataURL('image/png');
-    link.download = 'test.png';
-    
-    link.click();
+  const renderImgList = () => {
+    if( pngList === null ) return null;
+
+    const list = [];
+
+    for( let i = 0; i < pngList.length; i++ ) {
+      list.push( <img src={ pngList[i] } alt="test" /> )
+    }
+
+    return list;
   }
 
   return (
     <div>
-      <canvas id="canvas" width="1280" height="720"></canvas>
-      <input type="file" onChange={onChange} />
-      <Button className="mybutton" value="download" onClick={ download } />
+      <canvas id="canvas" width="1920" height="1080"></canvas>
+      <div className={styles.form}>
+        <input type="file" onChange={ onChange } />
+        <Button className="mybutton" value="download all" onClick={ downloadAll } />
+      </div>
+      <div className={styles.preview}>{ renderImgList() }</div>
     </div>
   );
 }
