@@ -23,7 +23,8 @@ const MAX_Y = 0;
 
 const TEXT_MARGIN = 1.2;
 
-const data = [];
+const ASPECT_WIDTH = 1920;
+const ASPECT_HEIGHT = 1080;
 
 type settings = {
   font: string,
@@ -46,10 +47,15 @@ const Container = () => {
   useEffect( () => { renderImgList(); }, [ pngList ] );
 
   const initialize = () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const wrapper: any = document.querySelector( `.${styles.canvas_wrapper}` );
+
     const canvas: any = document.getElementById('canvas');
 
+    canvas.width = wrapper.clientWidth;
+
+    canvas.height = wrapper.clientHeight;
+    // canvas.height = canvas.width * ASPECT_RATIO;
+    
     const canvasContext = canvas.getContext('2d');
 
     setContext(canvasContext);
@@ -105,21 +111,23 @@ const Container = () => {
 
   const renderText = ( type, text ) => {
     if( context === null || text === '' ) return;
+    const scale = window.innerWidth / ASPECT_WIDTH;
 
     const canvas: any = document.getElementById('canvas');
+
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     const settings = divideTextSettings(type);
 
     // 文字オプションを設定する
-    context.font = `${settings.size}px ${settings.font}`;
+    context.font = `${settings.size * scale}px ${settings.font}`;
     context.fillStyle = settings.color;
     context.textAlign = settings.align;
     context.textBaseline = 'top';
 
     // アウトラインを設定する
     context.strokeStyle = settings.outline;
-    context.lineWidth = 3;
+    context.lineWidth = 3 * scale;
 
     // ドロップシャドウを設定する
     context.shadowColor = settings.outline;
@@ -133,15 +141,15 @@ const Container = () => {
     
     for( let i = 0; i < text.length; i++ ) {
       const mesure = context.measureText( str + text.charAt( i ) );
-      if( mesure.width + MIN_X > MAX_X ) {
+      if( mesure.width + (MIN_X * scale) > (MAX_X * scale)) {
         str = '';
         y += settings.size * settings.height;
       }
 
       str += text.charAt( i );
 
-      context.strokeText( str, x, y );
-      context.fillText( str, x, y );
+      context.strokeText( str, x * scale, y * scale );
+      context.fillText( str, x * scale, y * scale );
     }
    
     y += settings.size * ( settings.height * TEXT_MARGIN );
@@ -259,7 +267,7 @@ const Container = () => {
     const list = [];
 
     for( let i = 0; i < pngList.length; i++ ) {
-      list.push( <img src={ pngList[i] } alt="test" /> )
+      list.push( <img key={i} src={ pngList[i] } alt="test" /> )
     }
 
     return list;
@@ -267,7 +275,9 @@ const Container = () => {
 
   return (
     <div>
-      <canvas id="canvas" width="1920" height="1080"></canvas>
+      <div className={ styles.canvas_wrapper }>
+        <canvas id="canvas" width="1920" height="1080"></canvas>
+      </div>
       <div className={styles.form}>
         <input type="file" onChange={ onChange } />
         <Button className="mybutton" value="download all" onClick={ downloadAll } />
