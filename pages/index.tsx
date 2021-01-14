@@ -4,6 +4,8 @@ import styles from '../styles/Home.module.css'
 
 import JSZip from 'jszip'
 
+import Convertor from './models/Convertor'
+
 export default function Home() {
   return (
     <div className={ styles.container }>
@@ -26,14 +28,8 @@ const MAX_Y = 880;
 
 const TEXT_MARGIN = 1.2;
 
-class TextSettings {
-  font: string = '';
-  color: string = '';
-  outline: string = '';
-  align: string = '';
-  size: number = 0;
-  height: number = 0;
-}
+let textX = 0;
+let textY = 0;
 
 const Container = () => {
   // contextを状態として持つ
@@ -47,69 +43,62 @@ const Container = () => {
   useEffect( () => { renderImgList(); }, [ pngList ] );
 
   const initialize = () => {
-    const canvas: any = document.getElementById('canvas');
+    const canvas: any = document.getElementById( 'canvas' );
 
     // アスペクト比を固定するためにCSSで16:9にした要素からサイズを取得する
     canvas.width = canvas.parentNode.clientWidth;
     
     canvas.height = canvas.parentNode.clientHeight;
     
-    const canvasContext = canvas.getContext('2d');
+    const canvasContext = canvas.getContext( '2d' );
 
-    setContext(canvasContext);
+    setContext( canvasContext );
   }
 
-  const divideTextSettings = (type) : TextSettings => {
-    const result: TextSettings = new TextSettings();
+  // ファイル選択イベント
+  const onChange = (e) => {
+    const files = e.target.files;
 
-    switch ( type ) {
-      case 'N':
-        result.font  = 'ヒラギノ明朝 Pro W4';
-        result.color = '#FFF';
-        result.outline = '#000';
-        result.size  = 65;
-        result.height = 1.1618;
-        result.align = 'left';
-        break;
-      case 'A':
-        result.font  = 'ヒラギノ丸ゴ Pro W4';
-        result.color = '#FFF';
-        result.outline = '#08003F';
-        result.size  = 80;
-        result.height = 1;
-        result.align = 'left';
-        break;
-      case 'B':
-        result.font  = 'ヒラギノ丸ゴ Pro W4';
-        result.color = '#FFF';
-        result.outline = '#570001';
-        result.size  = 80;
-        result.height = 1;
-        result.align = 'left';
-        break;
-      case 'C':
-        result.font  = 'ヒラギノ丸ゴ Pro W4';
-        result.color = '#FFF';
-        result.outline = '#4A5700';
-        result.size  = 80;
-        result.height = 1;
-        result.align = 'left';
-        break;
+    if( files.length < 1 ) return;
+
+    const reader = new FileReader();
+    
+    reader.readAsText( files[ 0 ] );
+    
+    reader.onload = () => {
+      const passage: string = reader.result.toString();
+
+      const result: any = Convertor.adjustPassage( passage );
+
+      createPngList( result );
+    }
+  }
+
+  const createPngList = (passage) => {
+    if( passage === null ) return;
+
+    const list = [];
+
+    for( const e of passage ) {
+      for( const k of Object.keys( e ) ) {
+        const arr: [] = e[ k ];
+        arr.forEach( e => list.push( createPngDataURL( k, e ) ) );
+      }
     }
 
-    return result;
+    setPngList( list );
   }
-
-  const renderText = ( type, text ) => {
+  
+  const createPngDataURL = ( type, text ) => {
     if( context === null || text === '' ) return;
 
-    const canvas: any = document.getElementById('canvas');
+    const canvas: any = document.getElementById( 'canvas' );
 
     context.clearRect( 0, 0, canvas.width, canvas.height );
 
     const scale = window.innerWidth / ASPECT_WIDTH;
 
-    const settings = divideTextSettings(type);
+    const settings = Convertor.divideTextSettings( type );
 
     const startX = MIN_X * scale;
     const startY = MIN_Y * scale;
@@ -135,81 +124,32 @@ const Container = () => {
 
     let str = '';
 
-    let x = startX;
-    let y = startY;
-    
+    textX = startX;
+    if( textY > maxY ) textY = startY;
+
     for( let i = 0; i < text.length; i++ ) {
+      if( textY > maxY ) textY = startY;
+
       const mesure = context.measureText( str + text.charAt( i ) );
+      
       if( mesure.width > maxX ) {
         str = '';
-        y += fontSize * settings.height;
+        textY += fontSize * settings.height;
       }
 
       str += text.charAt( i );
 
-      context.strokeText( str, x, y );
-      context.fillText( str, x, y );
+      context.strokeText( str, textX, textY );
+      context.fillText( str, textX, textY );
     }
    
-    y += settings.size * ( settings.height * TEXT_MARGIN );
+    textY += settings.size * ( settings.height * TEXT_MARGIN );
     
-    return canvas.toDataURL('image/png');
+    return canvas.toDataURL( 'image/png' );
   }
 
-  const adjustPassage = ( passage: string ): object[] => {
-    const result: object[] = [];
-
-    const regExp = new RegExp('[N|A|B|C|E]');
-
-    let s = 0;
-
-    for( let i = 0; i < passage.length; i++ ) {
-      if( regExp.test( passage.charAt( i ) ) === false ) continue
-
-      if( s >= i ) continue;
-
-      result.push( { [ passage.slice( s, s + 1 ) ] : passage.slice( s + 2, i ).split( '\n' ).filter( e => e !== '' ) } );
-
-      s = i;
-    }
-
-    return result;
-  }
-
-  const onChange = (e) => {
-    const files = e.target.files;
-
-    if( files.length < 1 ) return;
-
-    const reader = new FileReader();
-    
-    reader.readAsText( files[ 0 ] );
-    
-    reader.onload = () => {
-      const passage: string = reader.result.toString();
-
-      const result: any = adjustPassage( passage );
-
-      test(result)
-    }
-  }
-
-  const test = (passage) => {
-    if( passage === null ) return;
-
-    const list = [];
-
-    for( const e of passage ) {
-      for( const k of Object.keys( e ) ) {
-        const arr: [] = e[ k ];
-        arr.forEach( e => list.push( renderText( k, e ) ) );
-      }
-    }
-
-    setPngList( list );
-  }
-
-  const downloadAll = () => {
+  // ダウンロードボタンクリックイベント
+  const onClickDownloadAll = () => {
     if( pngList === null ) return;
 
     const zip = new JSZip();
@@ -218,7 +158,7 @@ const Container = () => {
     const folder = zip.folder( folderName );
 
     for( let i = 0; i < pngList.length; i++ ) {
-      folder.file( `test_${ i }.png`, toBlob( pngList[ i ] ) );
+      folder.file( `test_${ i }.png`, Convertor.base64ToBlob( pngList[ i ] ) );
     }
 
     zip.generateAsync( { type: 'blob' } ).then( blob => {
@@ -232,42 +172,17 @@ const Container = () => {
     } );
   }
 
-  const toBlob = ( base64 ) => {
-    let blob = null;
-
-    let bin = atob( base64.replace( /^.*,/, '' ) );
-    let buffer = new Uint8Array( bin.length );
-    for ( let i = 0; i < bin.length; i++ ) {
-        buffer[ i ] = bin.charCodeAt( i );
-    }
-    // Blobを作成
-    try{
-        blob = new Blob( [ buffer.buffer ], {
-          type: 'image/png'
-        });
-    }catch (e){
-        return blob;
-    }
-
-    return blob;
-  }
-  
-  const download = () => {
-    for( let i = 0; i < pngList.length; i++ ) {
-      const link = document.createElement('a');
-      link.href = pngList[i];
-      link.download = `test_${i}.png`;
-      link.click();
-    }
-  }
-
   const renderImgList = () => {
     if( pngList === null ) return null;
 
     const list = [];
 
     for( let i = 0; i < pngList.length; i++ ) {
-      list.push( <img key={i} src={ pngList[i] } alt="test" /> )
+      list.push(
+        <a key={ `a_${i}` } href={pngList[ i ] } download={ `test_${i}.png` }>
+          <img key={ `img_${i}` } src={ pngList[i] } alt="test" />
+        </a>
+      );
     }
 
     return list;
@@ -280,7 +195,7 @@ const Container = () => {
       </div>
       <div className={styles.form}>
         <input type="file" onChange={ onChange } />
-        <Button className="mybutton" value="download all" onClick={ downloadAll } />
+        <Button className="mybutton" value="download all" onClick={ onClickDownloadAll } />
       </div>
       <div className={styles.preview}>{ renderImgList() }</div>
     </div>
