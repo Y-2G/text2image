@@ -34,14 +34,14 @@ let textY = 0;
 const Container = () => {
   // contextを状態として持つ
   const [ context, setContext ] = useState( null );
-  
-  const [ scale, setScale ] = useState( null );
+
+  const [ pngList, setPngList ] = useState( null );
+
+  const [ scale, setScale ] = useState( 0 );
   const [ beginX, setBeginX ] = useState( 0 );
   const [ beginY, setBeginY ] = useState( 0 );
   const [ endX, setEndX ] = useState( 0 );
   const [ endY, setEndY ] = useState( 0 );
-
-  const [ pngList, setPngList ] = useState( null );
 
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
   useEffect( () => { initialize(); }, [] );
@@ -54,16 +54,18 @@ const Container = () => {
     // アスペクト比を固定するためにCSSで16:9にした要素からサイズを取得する
     const scale = window.innerWidth / ASPECT_WIDTH;
    
-    const beginX = MIN_X * scale;
-    const beginY = MIN_Y * scale;
-    const endX = ( MAX_X * scale ) - beginX;
-    const endY = ( MAX_Y * scale );
-
     canvas.width = ASPECT_WIDTH * scale;
     
     canvas.height = ASPECT_HEIGHT * scale;
     
     const canvasContext = canvas.getContext( '2d' );
+
+    const beginX = MIN_X * scale;
+    const beginY = MIN_Y * scale;
+    const endX = ( MAX_X * scale ) - beginX;
+    const endY = ( MAX_Y * scale );
+
+    setContext( canvasContext );
 
     setScale( scale );
     setBeginX( beginX );
@@ -71,7 +73,6 @@ const Container = () => {
     setEndX( endX );
     setEndY( endY );
 
-    setContext( canvasContext );
   }
 
   // ファイル選択イベント
@@ -100,16 +101,15 @@ const Container = () => {
 
     for( const e of passage ) {
       for( const k of Object.keys( e ) ) {
-        const arr: [] = e[ k ];
-        arr.forEach( e => list.push( createPngDataURL( k, e ) ) );
+        list.push( createPngDataURL( k, e ) );
       }
     }
 
     setPngList( list );
   }
   
-  const createPngDataURL = ( type, text ) => {
-    if( context === null || text === '' ) return;
+  const createPngDataURL = ( type, sentence: string ) => {
+    if( context === null || sentence === '' ) return;
 
     const canvas: any = document.getElementById( 'canvas' );
 
@@ -139,25 +139,44 @@ const Container = () => {
 
     textX = beginX;
 
-    for( let i = 0; i < text.length; i++ ) {
-      if( textY > endY ) textY = beginY;
+    const rows = sentence[ type ].split( '\n' ).filter( e => e !== '' );
 
-      const mesure = context.measureText( str + text.charAt( i ) );
+    const result = [];
+
+    for( let i = 0; i < rows.length; i++ ) {
       
-      if( mesure.width > endX ) {
-        str = '';
-        textY += fontSize * settings.height;
+      for( let j = 0; j < rows[ i ].length; j++ ) {
+
+        const char = rows[ i ].charAt( j );
+        const mesure = context.measureText( str + char );
+        
+        if( mesure.width > endX ) {
+          str = '';
+          textY += fontSize * settings.height;
+        }
+  
+        if( textY > endY ) textY = beginY;
+
+        str += char;
+  
+        context.strokeText( str, textX, textY );
+        context.fillText( str, textX, textY );
+      
       }
 
-      str += text.charAt( i );
+      result.push( canvas.toDataURL( 'image/png' ) )
+      str = '';
+      context.clearRect( 0, 0, canvas.width, canvas.height );
 
-      context.strokeText( str, textX, textY );
-      context.fillText( str, textX, textY );
+      textY += fontSize * settings.height;
+      
+      if( i % 3 === 0 ) textY += ( TEXT_MARGIN * scale );
+
     }
-   
-    textY += settings.size * ( settings.height * TEXT_MARGIN );
     
-    return canvas.toDataURL( 'image/png' );
+    textY += settings.size * ( settings.height * TEXT_MARGIN );
+
+    return result //canvas.toDataURL( 'image/png' );
   }
 
   // ダウンロードボタンクリックイベント
@@ -170,7 +189,9 @@ const Container = () => {
     const folder = zip.folder( folderName );
 
     for( let i = 0; i < pngList.length; i++ ) {
-      folder.file( `test_${ i }.png`, Convertor.base64ToBlob( pngList[ i ] ) );
+      for( let j = 0; j < pngList[i].length; j++ ) {
+       folder.file( `test_${ i }_${ j }.png`, Convertor.base64ToBlob( pngList[ i ][ j ] ) );
+      }
     }
 
     zip.generateAsync( { type: 'blob' } ).then( blob => {
@@ -188,13 +209,14 @@ const Container = () => {
     if( pngList === null ) return null;
 
     const list = [];
-
     for( let i = 0; i < pngList.length; i++ ) {
-      list.push(
-        <a key={ `a_${i}` } href={pngList[ i ] } download={ `test_${i}.png` }>
-          <img key={ `img_${i}` } src={ pngList[i] } alt="test" />
-        </a>
-      );
+      for( let j = 0; j < pngList[i].length; j++ ) {
+        list.push(
+          <a key={ `a_${i}_${j}` } href={ pngList[ i ][j] } download={ `test_${i}.png` }>
+            <img key={ `img_${i}_${j}` } src={ pngList[i][j] } alt="test" />
+          </a>
+        );
+      }
     }
 
     return list;

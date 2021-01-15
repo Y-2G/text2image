@@ -64,7 +64,7 @@ class Convertor {
       const key = passage.slice( separatePoint, separatePoint + 1 );
       
       // 前回の区切り位置から行単位で区切って値に設定する
-      const val = passage.slice( separatePoint + 2, i ).split( '\n' ).filter( e => e !== '' );
+      const val = passage.slice( separatePoint + 2, i );
       
       // オブジェクトを保存する
       result.push( { [ key ] : val } );
