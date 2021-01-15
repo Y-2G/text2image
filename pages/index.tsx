@@ -24,7 +24,7 @@ const ASPECT_HEIGHT = 1080;
 const MIN_X = 220;
 const MAX_X = 1700;
 const MIN_Y = 200;
-const MAX_Y = 880;
+const MAX_Y = 970;
 
 const TEXT_MARGIN = 1.2;
 
@@ -34,6 +34,12 @@ let textY = 0;
 const Container = () => {
   // contextを状態として持つ
   const [ context, setContext ] = useState( null );
+  
+  const [ scale, setScale ] = useState( null );
+  const [ beginX, setBeginX ] = useState( 0 );
+  const [ beginY, setBeginY ] = useState( 0 );
+  const [ endX, setEndX ] = useState( 0 );
+  const [ endY, setEndY ] = useState( 0 );
 
   const [ pngList, setPngList ] = useState( null );
 
@@ -46,11 +52,24 @@ const Container = () => {
     const canvas: any = document.getElementById( 'canvas' );
 
     // アスペクト比を固定するためにCSSで16:9にした要素からサイズを取得する
-    canvas.width = canvas.parentNode.clientWidth;
+    const scale = window.innerWidth / ASPECT_WIDTH;
+   
+    const beginX = MIN_X * scale;
+    const beginY = MIN_Y * scale;
+    const endX = ( MAX_X * scale ) - beginX;
+    const endY = ( MAX_Y * scale );
+
+    canvas.width = ASPECT_WIDTH * scale;
     
-    canvas.height = canvas.parentNode.clientHeight;
+    canvas.height = ASPECT_HEIGHT * scale;
     
     const canvasContext = canvas.getContext( '2d' );
+
+    setScale( scale );
+    setBeginX( beginX );
+    setBeginY( beginY );
+    setEndX( endX );
+    setEndY( endY );
 
     setContext( canvasContext );
   }
@@ -96,15 +115,9 @@ const Container = () => {
 
     context.clearRect( 0, 0, canvas.width, canvas.height );
 
-    const scale = window.innerWidth / ASPECT_WIDTH;
-
     const settings = Convertor.divideTextSettings( type );
 
-    const startX = MIN_X * scale;
-    const startY = MIN_Y * scale;
     const fontSize = settings.size * scale;
-    const maxX = ( MAX_X * scale ) - startX;
-    const maxY = ( MAX_Y * scale ) - startY;
 
     // 文字オプションを設定する
     context.font = `${ fontSize }px ${ settings.font }`;
@@ -124,15 +137,14 @@ const Container = () => {
 
     let str = '';
 
-    textX = startX;
-    if( textY > maxY ) textY = startY;
+    textX = beginX;
 
     for( let i = 0; i < text.length; i++ ) {
-      if( textY > maxY ) textY = startY;
+      if( textY > endY ) textY = beginY;
 
       const mesure = context.measureText( str + text.charAt( i ) );
       
-      if( mesure.width > maxX ) {
+      if( mesure.width > endX ) {
         str = '';
         textY += fontSize * settings.height;
       }
