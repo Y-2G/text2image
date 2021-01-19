@@ -6,7 +6,7 @@ class Convertor {
   
     switch ( type ) {
       case 'N':
-        result.font  = 'ヒラギノ明朝 Pro W4';
+        result.font  = 'ヒラギノ明朝 Pro W3';
         result.color = '#FFF';
         result.outline = '#000';
         result.size  = 65;

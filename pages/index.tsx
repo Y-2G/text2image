@@ -1,10 +1,19 @@
-import React, {useState,useEffect} from 'react'
+import React, {useState,useEffect, isValidElement} from 'react'
 import Head from 'next/head'
 import styles from '../styles/Home.module.css'
 
 import JSZip from 'jszip'
 
+import Limit from './models/Limit'
+import Vector from './models/Vector'
 import Convertor from './models/Convertor'
+import Font from './models/Font'
+import Text from './models/Text'
+import Line from './models/Line'
+import Factory from './models/Factory'
+import Position from './models/Position'
+import { connect } from 'http2'
+import { sep } from 'path'
 
 export default function Home() {
   return (
@@ -22,26 +31,274 @@ const ASPECT_WIDTH = 1920;
 const ASPECT_HEIGHT = 1080;
 
 const MIN_X = 220;
-const MAX_X = 1700;
 const MIN_Y = 200;
+
+const MAX_X = 1700;
 const MAX_Y = 970;
 
-const TEXT_MARGIN = 1.2;
+interface Format {
+  export( sentence: string ): Scenario;
+}
 
-let textX = 0;
-let textY = 0;
+// class SeparateNABCE implements Format {
+//   export( sentence: string ): Scenario {
+//     const result: Scenario = new Scenario();
+
+//     // 区切り文字
+//     const regExp = new RegExp( '[N|A|B|C|E]' );
+  
+//     // 区切り位置
+//     let separatePoint: number = 0;
+
+//     // 文章を1文字ずつ検査する
+//     for( let i = 0; i < sentence.length; i++ ) {
+//       // 区切り文字以外はスルー
+//       if( regExp.test( sentence.charAt( i ) ) === false ) continue
+  
+//       // 最初の区切り文字はスルー
+//       if( separatePoint >= i ) continue;
+  
+//       // 区切り文字をキーに設定する
+//       const type = sentence.slice( separatePoint, separatePoint + 1 );
+      
+//       // 前回の区切り位置から行単位で区切って値に設定する
+//       const value = sentence.slice( separatePoint + 2, i );
+      
+//       // オブジェクトを保存する
+//       result.append( new Paragraph( type, value ) );
+  
+//       // 区切り位置を更新する
+//       separatePoint = i;
+//     }
+  
+//     return result;
+//   }
+// }
+
+class SeparateNABCE implements Format {
+  export( sentence: string ): Scenario {
+    const result: Scenario = new Scenario();
+    const test = sentence.split( '\n' );
+
+    let type = '';
+    for( let i = 0; i < test.length; i++ ) {
+      if( test[i] === '' ) continue;
+
+      if( test[i].match( /^[N|A|B|C|E]$/) !== null ) {
+        type = test[i]
+        continue; 
+      }
+
+      result.append( new Paragraph( type, test[i] ) );
+    }
+    return result;
+  }
+}
+
+// ==================================================
+// TODO: イテレーターにする？
+class Scenario {
+  private _collection: Paragraph[] = [];
+
+  public append( paragraph: Paragraph ) {
+    this._collection.push( paragraph );
+  }
+
+  public getParagraphs(): Paragraph[] {
+    return this._collection;
+  }
+}
+
+class Paragraph {
+  private _type: string = '';
+  private _value: string= '';
+  
+  constructor( type: string, value: string ) {
+    this._type = type;
+    this._value = value;
+  }
+
+  public get type(): string { 
+    return this._type;
+  }
+
+  public get value(): string { 
+    return this._value;
+  }
+}
+
+// ==================================================
+
+// ==================================================
+class Scene { 
+  private _collection: Page[] = [];
+
+  public append( page: Page ) {
+    this._collection.push( page );
+  }
+
+  public get() {
+    return this._collection;
+  }
+}
+
+class Page {
+  private _collection = [];
+
+  public append( list ) {
+    this._collection.push( list )
+  }
+
+  public get() {
+    return this._collection;
+  }
+}
+// ==================================================
+
+class Drawer {
+  private canvas: HTMLCanvasElement = null;
+  private scenario: Scenario
+  private limit: Limit = null;
+  private position = new Position();
+  private scene = new Scene();
+  private collection = [];
+
+  public constructor( canvas: HTMLCanvasElement, scenario: Scenario, limit: Limit ) {
+    this.limit = limit;
+    this.canvas = canvas;
+    this.scenario = scenario;
+    this.position = new Position(limit.min.x, limit.min.y);
+    this.init();
+    this.test2()
+  }
+  
+  public init() {
+    const collection = this.scenario.getParagraphs();
+    for( let i = 0; i < collection.length; i++ ) {
+      this.test1( collection[ i ] );
+    }
+  }
+
+  public test1( paragraph ) {
+    const type = paragraph.type;
+    const value = paragraph.value;
+
+    let remain = value;
+
+    while( remain.length > 0 ) {
+      remain = this.createLine( type, remain );
+    }
+  }
+
+  public createLine( type, str ) {
+    const font = Factory.createFont( type );
+
+    const position = new Position( this.position.x, this.position.y );
+
+    const context = this.canvas.getContext( '2d' );
+
+    context.font = `${ font.size }px ${ font.fontFamily }`;
+
+    let separator = 0;
+
+    for( let i = 0; i < str.length; i++ ) {
+      const mesure = context.measureText( str.slice( 0, ++separator ) );
+      if( this.limit.min.x + mesure.width > this.limit.max.x ) break;
+      // const width  = mesure.width;
+      // const height = mesure.actualBoundingBoxAscent + mesure.actualBoundingBoxDescent
+    }
+
+    const value = str.slice( 0, separator );
+
+    this.collection.push( new Line( font, value, position ) );
+
+    const newY = this.position.y + ( font.size * font.lineHeight );
+    this.moveY( newY )
+
+    return str.slice( separator, str.length );
+  }
+
+  public test2() {
+    let test = [];
+
+    for( let i = 0; i < this.collection.length; i++ ) {
+      const e = this.collection[ i ];
+      const y = e.position.y;
+
+      if( i !== 0 && y === this.limit.min.y ) {
+        this.createPage( test );
+        test = [];
+      } 
+
+      test.push( e )
+    }
+  }
+
+  public createPage( arr ) {
+    const page = new Page();
+    for( let i = 0; i < arr.length; i++ ) {
+      page.append( arr[ i ] )
+    }
+    this.scene.append( page )
+  }
+  
+  public moveY( newY, margin = 0 ) {
+    if( newY < this.limit.max.y ) return this.position.set( this.limit.min.x, newY + margin );
+
+    this.position.set( this.limit.min.x, this.limit.min.y );
+  }
+
+  public move( font ) {
+    const nowX = this.position.x;
+    const nowY = this.position.y;
+    const newX = nowX + font.size;
+    const newY = nowY + ( font.size * font.lineHeight );
+
+    if( newX < this.limit.max.x ) return this.position.set( newX, nowY );
+
+    if( newY < this.limit.max.y ) return this.position.set( this.limit.min.x, newY);
+
+    this.position.set( this.limit.min.x, this.limit.min.y );
+  }
+
+  public draw() {
+    if( this.canvas === null ) return;
+
+    const context = this.canvas.getContext( '2d' );
+    
+    const test = this.scene.get();
+
+    const result = [];
+    for( let i = 0; i < test.length; i++ ) {
+      const page = test[ i ]
+
+      for( let j = 0; j < page.get().length; j++ ) {
+
+        const line = page.get()[j]
+
+        const context = this.canvas.getContext( '2d' );
+        const v: string = line.value;
+        const x: number = line.position.x;
+        const y: number = line.position.y;
+    
+        context.strokeText( v, x, y );
+        context.fillText( v, x, y );
+      }
+      
+      result.push( this.canvas.toDataURL("image/png") );
+
+      context.clearRect(0, 0, this.canvas.width, this.canvas.height)
+    }
+
+    return result
+  }
+}
 
 const Container = () => {
   // contextを状態として持つ
   const [ context, setContext ] = useState( null );
 
   const [ pngList, setPngList ] = useState( null );
-
-  const [ scale, setScale ] = useState( 0 );
-  const [ beginX, setBeginX ] = useState( 0 );
-  const [ beginY, setBeginY ] = useState( 0 );
-  const [ endX, setEndX ] = useState( 0 );
-  const [ endY, setEndY ] = useState( 0 );
 
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
   useEffect( () => { initialize(); }, [] );
@@ -50,28 +307,18 @@ const Container = () => {
 
   const initialize = () => {
     const canvas: any = document.getElementById( 'canvas' );
+    const context = canvas.getContext( '2d' );
+
+    setContext( context );
 
     // アスペクト比を固定するためにCSSで16:9にした要素からサイズを取得する
     const scale = window.innerWidth / ASPECT_WIDTH;
-   
-    canvas.width = ASPECT_WIDTH * scale;
-    
-    canvas.height = ASPECT_HEIGHT * scale;
-    
-    const canvasContext = canvas.getContext( '2d' );
 
-    const beginX = MIN_X * scale;
-    const beginY = MIN_Y * scale;
-    const endX = ( MAX_X * scale ) - beginX;
-    const endY = ( MAX_Y * scale );
+    // canvas.width = ASPECT_WIDTH * scale;
+    // canvas.height = ASPECT_HEIGHT * scale;
 
-    setContext( canvasContext );
-
-    setScale( scale );
-    setBeginX( beginX );
-    setBeginY( beginY );
-    setEndX( endX );
-    setEndY( endY );
+    canvas.width = ASPECT_WIDTH;
+    canvas.height = ASPECT_HEIGHT;
 
   }
 
@@ -86,100 +333,25 @@ const Container = () => {
     reader.readAsText( files[ 0 ] );
     
     reader.onload = () => {
-      const passage: string = reader.result.toString();
+      const canvas: any = document.getElementById( 'canvas' );
 
-      const result: any = Convertor.adjustPassage( passage );
+      const sentence: string = reader.result.toString();
+      const format: Format = new SeparateNABCE();
+      // const format: Format = new TestFormat();
+      const scenario: Scenario = format.export( sentence );
 
-      createPngList( result );
+      const min: Vector = new Vector( MIN_X, MIN_Y );
+      const max: Vector = new Vector( MAX_X, MAX_Y );
+      const limit = new Limit( min, max )
+      
+      const drawer: Drawer= new Drawer( canvas, scenario, limit );
+
+      const list = drawer.draw();
+
+      setPngList( list )
     }
   }
 
-  const createPngList = (passage) => {
-    if( passage === null ) return;
-
-    const list = [];
-
-    for( const e of passage ) {
-      for( const k of Object.keys( e ) ) {
-        list.push( createPngDataURL( k, e ) );
-      }
-    }
-
-    setPngList( list );
-  }
-  
-  const createPngDataURL = ( type, sentence: string ) => {
-    if( context === null || sentence === '' ) return;
-
-    const canvas: any = document.getElementById( 'canvas' );
-
-    context.clearRect( 0, 0, canvas.width, canvas.height );
-
-    const settings = Convertor.divideTextSettings( type );
-
-    const fontSize = settings.size * scale;
-
-    // 文字オプションを設定する
-    context.font = `${ fontSize }px ${ settings.font }`;
-    context.fillStyle = settings.color;
-    context.textAlign = settings.align;
-    context.textBaseline = 'top';
-
-    // アウトラインを設定する
-    context.strokeStyle = settings.outline;
-    context.lineWidth = 3;
-
-    // ドロップシャドウを設定する
-    context.shadowColor = settings.outline;
-    context.shadowBlur = 0;
-    context.shadowOffsetX = 3;
-    context.shadowOffsetY = 1;
-
-    let str = '';
-
-    textX = beginX;
-
-    const rows = sentence[ type ].split( '\n' ).filter( e => e !== '' );
-
-    const result = [];
-
-    for( let i = 0; i < rows.length; i++ ) {
-      
-      for( let j = 0; j < rows[ i ].length; j++ ) {
-
-        const char = rows[ i ].charAt( j );
-        const mesure = context.measureText( str + char );
-        
-        if( mesure.width > endX ) {
-          str = '';
-          textY += fontSize * settings.height;
-        }
-  
-        if( textY > endY ) textY = beginY;
-
-        str += char;
-  
-        context.strokeText( str, textX, textY );
-        context.fillText( str, textX, textY );
-      
-      }
-
-      result.push( canvas.toDataURL( 'image/png' ) )
-      str = '';
-      context.clearRect( 0, 0, canvas.width, canvas.height );
-
-      textY += fontSize * settings.height;
-      
-      if( i % 3 === 0 ) textY += ( TEXT_MARGIN * scale );
-
-    }
-    
-    textY += settings.size * ( settings.height * TEXT_MARGIN );
-
-    return result //canvas.toDataURL( 'image/png' );
-  }
-
-  // ダウンロードボタンクリックイベント
   const onClickDownloadAll = () => {
     if( pngList === null ) return;
 
@@ -206,17 +378,16 @@ const Container = () => {
   }
 
   const renderImgList = () => {
-    if( pngList === null ) return null;
+    if( pngList === null ) return;
 
     const list = [];
+    
     for( let i = 0; i < pngList.length; i++ ) {
-      for( let j = 0; j < pngList[i].length; j++ ) {
         list.push(
-          <a key={ `a_${i}_${j}` } href={ pngList[ i ][j] } download={ `test_${i}.png` }>
-            <img key={ `img_${i}_${j}` } src={ pngList[i][j] } alt="test" />
+          <a key={ `a_${i}` } href={ pngList[ i ] } download={ `test_${i}.png` }>
+            <img key={ `img_${i}` } src={ pngList[ i ] } alt="test" />
           </a>
         );
-      }
     }
 
     return list;
