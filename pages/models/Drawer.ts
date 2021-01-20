@@ -3,6 +3,7 @@ import Limit from "./Limit";
 import Line from "./Line";
 import Page from "./Page";
 import Position from "./Position";
+import LimitedPosition from "./LimitedPosition";
 import { Scenario } from "./Scenario";
 import Scene from "./Scene";
 
@@ -40,28 +41,26 @@ class Drawer {
 
     const context = this.canvas.getContext( '2d' );
 
-    let text = null
-
-    const line = new Line();
-
+    const line: Line = new Line();
+    const position: LimitedPosition = new LimitedPosition( this.limit );
+    
     for( let i = 0; i < value.length; i++ ) {
-      text = Factory.createText( type, value.charAt( i ) );
+      const text = Factory.createText( type, value.charAt( i ) );
 
-      text.position.reset( this.position.x, this.position.y );
+      text.position.reset( position.x, position.y );
 
       line.append( text );
 
       context.font = `${ text.size }px ${ text.font }`;
 
       const mesure = context.measureText( text.value );
+ 
       const width  = mesure.width;
       const height = text.size * text.lineHeight;
       // const height = mesure.actualBoundingBoxAscent + mesure.actualBoundingBoxDescent
 
-      this.move( width, height );
+      position.move( width, height )
     }
-
-    this.newLine( text.size * text.lineHeight );
 
     this.lines.push( line );
   }

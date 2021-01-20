@@ -22,15 +22,15 @@ class Position {
     public set y( y: number ) {
       this._vector.y = y;
     }
-    
-    public reset( x: number = 0, y: number = 0 ): void {
-      this.x = x;
-      this.y = y;
-    }
-  
+
     public move( x: number = 0, y: number = 0 ): void {
       this.x = this.x + x;
       this.y = this.y + y;
+    }
+
+    public reset( x: number = 0, y: number = 0 ): void {
+      this.x = x;
+      this.y = y;
     }
   }
   
