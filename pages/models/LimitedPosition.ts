@@ -5,7 +5,7 @@ class LimitedPosition extends Position {
   private _limit: Limit = null;
 
   public constructor( limit ) {
-    super();
+    super( limit.min.x, limit.min.y );
     this._limit = limit;
   }
 
