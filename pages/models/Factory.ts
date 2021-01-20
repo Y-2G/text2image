@@ -1,40 +1,53 @@
-import Font from './Font'
-import Line from './Line'
+import Text from './Text';
+import TextSettings from './TextSettings';
 
 class Factory {
-  public static createFont = ( type: string ) => {
+
+  static createTextSettings = (type) : TextSettings => {
+    const result: TextSettings = new TextSettings();
+  
     switch ( type ) {
       case 'N':
-        return Factory.createFontN();
+        result.font  = 'ヒラギノ明朝 Pro W3';
+        result.color = '#FFF';
+        result.outline = '#000';
+        result.size  = 65;
+        result.height = 1.1618;
+        result.align = 'left';
+        break;
       case 'A':
-        return Factory.createFontA();
+        result.font  = 'ヒラギノ丸ゴ Pro W4';
+        result.color = '#FFF';
+        result.outline = '#08003F';
+        result.size  = 80;
+        result.height = 1;
+        result.align = 'left';
+        break;
       case 'B':
-        return Factory.createFontB();
+        result.font  = 'ヒラギノ丸ゴ Pro W4';
+        result.color = '#FFF';
+        result.outline = '#570001';
+        result.size  = 80;
+        result.height = 1;
+        result.align = 'left';
+        break;
       case 'C':
-        return Factory.createFontC();
+        result.font  = 'ヒラギノ丸ゴ Pro W4';
+        result.color = '#FFF';
+        result.outline = '#4A5700';
+        result.size  = 80;
+        result.height = 1;
+        result.align = 'left';
+        break;
     }
-  }
-
-  public static createFontN = () => {
-    return new Font( 65, 1.1618, 'ヒラギノ明朝 Pro W3' );
-  }
-
-  public static createFontA = () => {
-    return new Font( 80, 1, 'ヒラギノ丸ゴ Pro W4' );
+  
+    return result;
   }
   
-  public static createFontB = () => {
-    return new Font( 80, 1, 'ヒラギノ丸ゴ Pro W4' );
-  }
-
-  public static createFontC = () => {
-    return new Font( 80, 1, 'ヒラギノ丸ゴ Pro W4' );
-  }
-
-  public static createLine( canvas, font, position) {
-    return new Line( canvas, font, position );
+  public static createText = ( type: string, value: string ) => {
+    const settings: TextSettings = Factory.createTextSettings( type );
+    return new Text( value, settings )
   }
 }
-
 
 export default Factory;

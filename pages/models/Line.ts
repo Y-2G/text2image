@@ -1,41 +1,37 @@
-import Font from './Font'
+import Size from './Size';
+import Text from './Text'
 import Position from './Position'
 
 class Line {
-  private _font: Font = null;
-  private _value: string = '';
-  private _position: Position = null;
+  private _collection: Text[] = [];
 
-  public constructor( font: Font, value: string, position: Position ) {
-    this._font = font;
-    this._value = value;
-    this._position = position;
+  public get collection(): Text[] {
+    return this._collection;
   }
 
-  public get font() {
-    return this._font;
-  }
-
-  public get value() {
-    return this._value;
+  public get value(): string {
+    let result: string = '';
+    this._collection.forEach( e => result += e.value );
+    return result;
   }
 
   public get position(): Position {
-    return this._position;
+    return this._collection[ 0 ].position;
   }
 
   public get width(): number {
-    return this._value.length * this._font.size;
+    let result: number = 0;
+    this._collection.forEach( e => result += e.size );
+    return result;
   }
 
   public get height(): number {
-    return this._font.size * this._font.lineHeight;
+    return this._collection.slice( -1 )[ 0 ].position.y + this._collection[0].size;
   }
 
-  public append( char: string ): void {
-    this._value += char; 
+  public append( text: Text ): void {
+    this._collection.push( text ); 
   }
-
 }
 
 export default Line;
