@@ -1,34 +1,22 @@
-import Position from './Position'
 import TextSettings from './TextSettings';
+import CanvasObject from './CanvasObject';
 
-class Text {
-  private _value: string = '';
-  private _settings: TextSettings = null;
-  private _position: Position = new Position();
+class Text extends CanvasObject {
+  protected _settings: TextSettings = null;
+  protected _content: string = '';
 
-  constructor( value: string, settings: TextSettings ) {
-    this._value = value;
+  constructor( settings: TextSettings, content: string ) {
+    super();
     this._settings = settings;
+    this._content = content;
   }
 
-  public get font(): string {
-    return this._settings.font;
+  public get content(): string {
+    return this._content;
   }
 
-  public get size(): number {
-    return this._settings.size;
-  }
-
-  public get lineHeight(): number {
-    return this._settings.height;
-  }
-
-  public get value(): string {
-    return this._value;
-  }
-
-  public get position(): Position {
-    return this._position;
+  public get settings(): TextSettings {
+    return this._settings;
   }
 }
 

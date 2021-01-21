@@ -12,31 +12,21 @@ class Limit {
     public get min(): Vector {
       return this._min;
     };
-  
     
     public get max(): Vector {
       return this._max;
     };
     
     public isInLimitX( x: number ): boolean {
-      let result: boolean = false;
-      result = x >= this._min.x;
-      result = x <= this._max.x;
-      return result;
+      return x >= this._min.x && x <= this._max.x;
     }
     
     public isInLimitY( y: number ): boolean {
-      let result: boolean = false;
-      result = y <= this._min.y;
-      result = y >= this._max.y;
-      return result;
+      return y >= this._min.y && y <= this._max.y;
     }
   
     public isInLimit( x: number, y: number ): boolean {
-      let result: boolean = false;
-      result = this.isInLimitX( x );
-      result = this.isInLimitY( y );
-      return result;
+      return this.isInLimitX( x ) &&  this.isInLimitY( y );
     }
   }
 

@@ -1,22 +1,16 @@
-import Text from './Text'
-import Line from './Line'
-import Page from './Page'
+import Block from './Block';
+import CanvasObject from './CanvasObject'
 
 class Scene { 
-  private _collection: Page[] = [];
+  private _collection: Block[] = [];
 
-  public get colleciton(): Page[] {
+  public get collection(): Block[] {
     return this._collection;
   }
 
-  public append( page: Page ) {
-    this._collection.push( page );
+  public append( obj: Block ) {
+    this._collection.push( obj );
   }
-
-  public get(): Page[] {
-    return this.colleciton;
-  }
-
 }
 
 export default Scene;

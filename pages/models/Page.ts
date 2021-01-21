@@ -1,14 +1,14 @@
-import Line from "./Line";
+import Block from "./Block";
 
 class Page {
-  private _collection: Line[] = [];
+  private _collection: Block[] = [];
 
-  public get collection(): Line[] {
+  public get collection(): Block[] {
     return this._collection;
   }
 
-  public append( line: Line ): void {
-    this._collection.push( line )
+  public append( block: Block ): void {
+    this._collection.push( block );
   }
 
   public get() {

@@ -1,6 +1,6 @@
 import Factory from "./Factory";
 import Limit from "./Limit";
-import Line from "./Line";
+import Block from "./Block";
 import Page from "./Page";
 import Position from "./Position";
 import LimitedPosition from "./LimitedPosition";
@@ -11,7 +11,6 @@ class Drawer {
   private canvas: HTMLCanvasElement = null;
   private scenario: Scenario
   private limit: Limit = null;
-  private position = new Position();
   private scene = new Scene();
   private pages = [];
   private lines = [];
@@ -21,7 +20,6 @@ class Drawer {
     this.limit = limit;
     this.canvas = canvas;
     this.scenario = scenario;
-    this.position = new Position(limit.min.x, limit.min.y);
     this.init();
   }
   
@@ -38,67 +36,53 @@ class Drawer {
   public createLine( paragraph ) {
     const type = paragraph.type;
     const value = paragraph.value;
+    const settings = Factory.createTextSettings( type );
 
     const context = this.canvas.getContext( '2d' );
+    context.font = `${ settings.size }px ${ settings.font }`;
 
-    const line: Line = new Line();
-    const position: LimitedPosition = new LimitedPosition( this.limit );
+    const block: Block = new Block();
+
+    const position: Position = new Position();
     
     for( let i = 0; i < value.length; i++ ) {
-      const text = Factory.createText( type, value.charAt( i ) );
+      const text = Factory.createText( settings, value.charAt( i ) );
 
+      const mesure = context.measureText( text.content );
+      const width  = mesure.width;
+      const height = settings.size * settings.height;
+
+      text.size.width = width;
+      text.size.height = height;
       text.position.reset( position.x, position.y );
 
-      line.append( text );
+      block.append( text );
 
-      context.font = `${ text.size }px ${ text.font }`;
-
-      const mesure = context.measureText( text.value );
- 
-      const width  = mesure.width;
-      const height = text.size * text.lineHeight;
       // const height = mesure.actualBoundingBoxAscent + mesure.actualBoundingBoxDescent
 
-      position.move( width, height )
+      if( position.x + width < this.limit.max.x - this.limit.min.x ) position.move( width, 0 );
+      if( position.x + width > this.limit.max.x - this.limit.min.x ) position.move( -position.x, height );
     }
 
-    this.lines.push( line );
+    this.lines.push( block );
   }
 
-  public createPage() {
-    if( this.pages.length === 0 ) this.pages.push( new Page() );
+  public createPage( ) {
+    const block: Block = new Block();
+
+    const position: LimitedPosition = new LimitedPosition( this.limit );
     
     for( let i = 0; i < this.lines.length; i++ ) {
-      const line = this.lines[ i ];
+      this.lines[ i ].move( position.x, position.y );
 
-      if( line.position.y === this.limit.min.y ) this.pages.push( new Page() );
+      block.append( this.lines[ i ] );
 
-      const page = this.pages.slice( -1 )[ 0 ] || null;
-
-      page.append( line );
+      const y = this.lines[ i ].size.height;
+      position.move( 0, y );
+      console.log( y )
     }
-  }
 
-  public newLine( y ) {
-    const nowY = this.position.y;
-    const newY = nowY + y;
-
-    if( newY < this.limit.max.y ) return this.position.reset( this.limit.min.x, newY );
-    
-    this.position.reset( this.limit.min.x, this.limit.min.y )
-  }
-
-  public move( x, y ) {
-    const nowX = this.position.x;
-    const nowY = this.position.y;
-    const newX = nowX + x;
-    const newY = nowY + y;
-
-    if( newX < this.limit.max.x ) return this.position.reset( newX, nowY );
-
-    if( newY < this.limit.max.y ) return this.position.reset( this.limit.min.x, newY );
-
-    this.position.reset( this.limit.min.x, this.limit.min.y );
+    this.scene.append( block );
   }
 
   public draw() {
@@ -108,33 +92,34 @@ class Drawer {
 
     const context = this.canvas.getContext( '2d' );
 
-    for( let i = 0; i < this.pages.length; i++ ) {
+    const blocks: Block[] = this.scene.collection;
 
-      const lines = this.pages[ i ].collection;
+    for( let i = 0; i < blocks.length; i++ ) {
+
+      const lines = blocks[ i ].content;
 
       for( let j = 0; j < lines.length; j++ ) {
 
-        const texts = lines[ j ].collection;
+        const line = lines[ j ].content;
 
-        for( let k = 0; k < texts.length; k++ ) {
+        for( let k = 0; k < line.length; k++ ) {
 
-          const context = this.canvas.getContext( '2d' );
-  
-          const v: string = texts[ k ].value;
-          const x: number = texts[ k ].position.x;
-          const y: number = texts[ k ].position.y;
-      
+          const text = line[ k ];
+
+          const v: string = text.content;
+          const x: number = text.position.x;
+          const y: number = text.position.y;
+
           context.strokeText( v, x, y );
           context.fillText( v, x, y );
-  
         }
 
         result.push( this.canvas.toDataURL( "image/png" ) );
 
-        context.clearRect( 0, 0, this.canvas.width, this.canvas.height )
+        context.clearRect( 0, 0, this.canvas.width, this.canvas.height );
 
       }
-
+      
     }
 
     return result;

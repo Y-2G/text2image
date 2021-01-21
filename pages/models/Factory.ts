@@ -43,11 +43,11 @@ class Factory {
   
     return result;
   }
-  
-  public static createText = ( type: string, value: string ) => {
-    const settings: TextSettings = Factory.createTextSettings( type );
-    return new Text( value, settings )
+
+  public static createText = ( settings: TextSettings, value: string ) => {
+    return new Text( settings, value )
   }
+
 }
 
 export default Factory;
