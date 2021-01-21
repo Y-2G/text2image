@@ -78,8 +78,9 @@ class Drawer {
       block.append( this.lines[ i ] );
 
       const y = this.lines[ i ].size.height;
-      position.move( 0, y );
-      console.log( y )
+
+      if( position.canMoveY( y ) === true ) position.move( 0, y );
+      if( position.canMoveY( y ) === false ) position.reset( this.limit.min.x, this.limit.min.y );
     }
 
     this.scene.append( block );
