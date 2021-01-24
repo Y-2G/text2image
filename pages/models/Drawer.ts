@@ -135,7 +135,20 @@ class Drawer {
           const x: number = text.position.x;
           const y: number = text.position.y;
 
-          context.strokeText( v, x, y );
+          context.font = `${ text.settings.size }px ${ text.settings.font }`;
+          context.fillStyle = text.settings.color;
+          context.textAlign = text.settings.align;
+          context.textBaseline = 'top';
+      
+          // アウトラインを設定する
+          context.strokeStyle = text.settings.outline;
+          context.lineWidth = 3;
+      
+          // ドロップシャドウを設定する
+          context.shadowColor = text.settings.outline;
+          context.shadowBlur = 0;
+          context.shadowOffsetX = 3;
+          context.shadowOffsetY = 1;          context.strokeText( v, x, y );
           context.fillText( v, x, y );
         }
 

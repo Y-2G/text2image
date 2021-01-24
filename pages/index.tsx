@@ -81,7 +81,6 @@ const Container = () => {
       
       const drawer: Drawer = new Drawer( canvas, scenario, limit );
 
-      // const list = null;
       const list = drawer.draw();
 
       setPngList( list )
@@ -97,9 +96,7 @@ const Container = () => {
     const folder = zip.folder( folderName );
 
     for( let i = 0; i < pngList.length; i++ ) {
-      for( let j = 0; j < pngList[i].length; j++ ) {
-       folder.file( `test_${ i }_${ j }.png`, Convertor.base64ToBlob( pngList[ i ][ j ] ) );
-      }
+      folder.file( `test_${ i }.png`, Convertor.base64ToBlob( pngList[ i ] ) );
     }
 
     zip.generateAsync( { type: 'blob' } ).then( blob => {
