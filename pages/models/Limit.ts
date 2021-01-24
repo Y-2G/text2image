@@ -1,33 +1,21 @@
 import Vector from './Vector'
 
 class Limit {
-    private _min: Vector = null;
-    private _max: Vector = null;
-    
-    public constructor( min: Vector, max: Vector) {
-      this._min = min;
-      this._max = max;
-    }
+  private _min: Vector = new Vector();
+  private _max: Vector = new Vector();
   
-    public get min(): Vector {
-      return this._min;
-    };
-    
-    public get max(): Vector {
-      return this._max;
-    };
-    
-    public isInLimitX( x: number ): boolean {
-      return x >= this._min.x && x <= this._max.x;
-    }
-    
-    public isInLimitY( y: number ): boolean {
-      return y >= this._min.y && y <= this._max.y;
-    }
-  
-    public isInLimit( x: number, y: number ): boolean {
-      return this.isInLimitX( x ) &&  this.isInLimitY( y );
-    }
+  public constructor( min: Vector = null, max: Vector = null ) {
+    if( min !== null ) this._min = min;
+    if( max !== null ) this._max = max;
   }
 
-  export default Limit;
+  public get min(): Vector {
+    return this._min;
+  };
+  
+  public get max(): Vector {
+    return this._max;
+  };
+}
+
+export default Limit;

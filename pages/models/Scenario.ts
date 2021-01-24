@@ -1,18 +1,34 @@
 export class Scenario {
-  private _collection: Paragraph[] = [];
+  private _content: Part[] = [];
 
-  public append( paragraph: Paragraph ) {
-    this._collection.push( paragraph );
+  public get content(): Part[] {
+    return this._content;
   }
 
-  public getParagraphs(): Paragraph[] {
-    return this._collection;
+  public append( paragraph: Part ) {
+    this._content.push( paragraph );
+  }
+
+  public getParagraphs(): Part[] {
+    return this._content;
+  }
+}
+
+export class Part {
+  private _content: Paragraph[] = [];
+
+  public get content(): Paragraph[] {
+    return this._content;
+  }
+  
+  public append( paragraph: Paragraph ) {
+    this._content.push( paragraph );
   }
 }
 
 export class Paragraph {
   private _type: string = '';
-  private _value: string= '';
+  private _value: string = '';
   
   constructor( type: string, value: string ) {
     this._type = type;

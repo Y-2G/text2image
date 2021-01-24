@@ -1,7 +1,7 @@
 import Vector from './Vector'
 
 class Size {
-  private _vector: Vector = null;
+  private _vector: Vector = new Vector();
 
   public constructor( w: number = 0, h: number = 0 ) {
     this._vector = new Vector( w, h )
@@ -15,7 +15,7 @@ class Size {
     return this._vector.y;
   }
   
-  public set width( w) {
+  public set width( w ) {
     this._vector.x = w;
   }
   

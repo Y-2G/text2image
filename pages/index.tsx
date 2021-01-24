@@ -72,8 +72,8 @@ const Container = () => {
       const canvas: any = document.getElementById( 'canvas' );
 
       const sentence: string = reader.result.toString();
-      const format: Format = new SeparateNABCE();
-      const scenario: Scenario = format.export( sentence );
+      const format: Format = new SeparateNABCE( sentence );
+      const scenario: Scenario = format.export();
 
       const min: Vector = new Vector( MIN_X, MIN_Y );
       const max: Vector = new Vector( MAX_X, MAX_Y );

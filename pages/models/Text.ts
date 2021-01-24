@@ -18,6 +18,10 @@ class Text extends CanvasObject {
   public get settings(): TextSettings {
     return this._settings;
   }
+
+  public move( x: number, y: number ) {
+    this.position.move( x, y );
+  }
 }
 
 export default Text;

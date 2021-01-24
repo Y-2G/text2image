@@ -1,15 +1,15 @@
 import Block from './Block';
-import CanvasObject from './CanvasObject'
+import Page from './Page'
 
 class Scene { 
-  private _collection: Block[] = [];
+  protected _content: Page[] = [];
 
-  public get collection(): Block[] {
-    return this._collection;
+  public get content(): Page[] {
+    return this._content;
   }
 
-  public append( obj: Block ) {
-    this._collection.push( obj );
+  public append( obj: Page ) {
+    this._content.push( obj );
   }
 }
 
