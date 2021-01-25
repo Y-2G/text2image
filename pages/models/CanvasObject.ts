@@ -9,6 +9,7 @@ abstract class CanvasObject {
 
   public abstract get content(): any;
   public abstract move( x: number, y: number ): void;
+  public abstract adjust(): void;
 
   public get type(): string {
     return this._type;

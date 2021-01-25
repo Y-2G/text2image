@@ -13,7 +13,7 @@ import Drawer from './models/Drawer'
 
 export default function Home() {
   return (
-    <div className={ styles.container }>
+    <div>
       <Head>
         <title>Create Next App</title>
         <link rel="icon" href="/favicon.ico" />
@@ -116,6 +116,9 @@ const Container = () => {
     const list = [];
     
     for( let i = 0; i < pngList.length; i++ ) {
+      <div>
+        
+      </div>
         list.push(
           <a key={ `a_${i}` } href={ pngList[ i ] } download={ `test_${i}.png` }>
             <img key={ `img_${i}` } src={ pngList[ i ] } alt="test" />
@@ -127,11 +130,11 @@ const Container = () => {
   }
 
   return (
-    <div>
+    <div className={ styles.container } >
       <canvas id="canvas" className={ styles.canvas } width="1920" height="1080"></canvas>
       <div className={styles.form}>
-        <input type="file" onChange={ onChange } />
-        <Button className="mybutton" value="download all" onClick={ onClickDownloadAll } />
+        <input className={ styles.file } type="file" onChange={ onChange } />
+        <Button className={ styles.button } value="download all" onClick={ onClickDownloadAll } />
       </div>
       <div className={styles.preview}>{ renderImgList() }</div>
     </div>

@@ -22,6 +22,8 @@ class Text extends CanvasObject {
   public move( x: number, y: number ) {
     this.position.move( x, y );
   }
+  
+  public adjust(): void {}
 }
 
 export default Text;

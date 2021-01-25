@@ -1,18 +1,49 @@
+.container {
+    width: 100%;
+    padding: 24px;
+}
+
 .canvas {
     display: none;
 }
 
 .form {
     width: 100%;
-    margin: 24px 0;
+    margin-bottom: 24px;
 }
 
+.form .button {
+    margin-left: 12px;
+}
+
+.preview {
+    width: 100%;
+}
+
+.preview a {
+    font-size: 0;
+    display: inline-block;
+    width: calc( 20% - 12px );
+    border: 1px solid #ccc;
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+.preview a:nth-child(5n) {
+    margin-right: 0;
+}
+
+
 .preview img {
-    width: 20%;
+    width: 100%;
+}
+
+.preview a {
+    display: inline-block;
 }
 
 @media screen and (max-width: 900px) {
-    .preview img {
-        width: 33.3333%;
+    .preview a {
+        width: calc( 33.3333% - 12px );
     }
 }

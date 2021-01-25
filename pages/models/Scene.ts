@@ -1,5 +1,5 @@
 import Block from './Block';
-import Page from './Page'
+import Page from './CanvasObject'
 
 class Scene { 
   protected _content: Page[] = [];
