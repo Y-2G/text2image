@@ -4,12 +4,12 @@ import styles from '../styles/Home.module.css'
 
 import JSZip from 'jszip'
 
-import Limit from './models/Limit'
-import Vector from './models/Vector'
-import Convertor from './models/Convertor'
-import { Format, SeparateNABCE } from './models/Format'
-import { Scenario } from './models/Scenario'
-import Drawer from './models/Drawer'
+import Limit from '../models/Limit'
+import Vector from '../models/Vector'
+import Convertor from '../models/Convertor'
+import { Format, SeparateNABCE } from '../models/Format'
+import { Scenario } from '../models/Scenario'
+import Drawer from '../models/Drawer'
 
 export default function Home() {
   return (
