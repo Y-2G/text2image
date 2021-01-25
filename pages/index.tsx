@@ -128,9 +128,7 @@ const Container = () => {
 
   return (
     <div>
-      <div className={ styles.canvas_wrapper }>
-        <canvas id="canvas" width="1920" height="1080"></canvas>
-      </div>
+      <canvas id="canvas" className={ styles.canvas } width="1920" height="1080"></canvas>
       <div className={styles.form}>
         <input type="file" onChange={ onChange } />
         <Button className="mybutton" value="download all" onClick={ onClickDownloadAll } />

@@ -2,7 +2,7 @@ import Factory from "./Factory";
 import Limit from "./Limit";
 import Block from "./Block";
 import Position from "./Position";
-import { Paragraph, Scenario } from "./Scenario";
+import { Scenario } from "./Scenario";
 import Scene from "./Scene";
 import CanvasObject from './CanvasObject'
 import Page from "./Page";
@@ -92,6 +92,7 @@ class Drawer {
       const height = settings.size * settings.height;
 
       if( char === '\n' ) {
+        if( position.x === 0 ) continue;
         position.move( -position.x, height );
         continue;
       }
@@ -107,6 +108,9 @@ class Drawer {
       if( position.x + width < max ) position.move( width, 0 );
       if( position.x + width > max ) position.move( -position.x, height );
     }
+
+    const margin = settings.size * settings.height * 0.5;
+    block.size.height = block.size.height + margin;
 
     return block;
   }
@@ -148,7 +152,8 @@ class Drawer {
           context.shadowColor = text.settings.outline;
           context.shadowBlur = 0;
           context.shadowOffsetX = 3;
-          context.shadowOffsetY = 1;          context.strokeText( v, x, y );
+          context.shadowOffsetY = 1;
+          context.strokeText( v, x, y );
           context.fillText( v, x, y );
         }
 
