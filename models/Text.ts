@@ -1,5 +1,5 @@
-import TextSettings from './TextSettings';
-import CanvasObject from './CanvasObject';
+import TextSettings from './TextSettings'
+import CanvasObject from './CanvasObject'
 
 class Text extends CanvasObject {
   protected _settings: TextSettings = null;

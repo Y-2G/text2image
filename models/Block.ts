@@ -1,4 +1,4 @@
-import CanvasObject from './CanvasObject';
+import CanvasObject from './CanvasObject'
 
 class Block extends CanvasObject {
   protected _type: string = '';

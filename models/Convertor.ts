@@ -1,5 +1,5 @@
 class Convertor {
-  static base64ToBlob = ( base64 ) => {
+  public static base64ToBlob( base64 ) {
     let blob = null;
 
     let bin = atob( base64.replace( /^.*,/, '' ) );

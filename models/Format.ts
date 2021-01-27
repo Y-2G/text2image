@@ -1,4 +1,4 @@
-import { Scenario, Part, Paragraph } from "./Scenario";
+import { Scenario, Part, Paragraph } from "./Scenario"
 
 export interface Format {
   export(): Scenario;

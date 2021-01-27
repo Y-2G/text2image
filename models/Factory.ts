@@ -1,9 +1,8 @@
-import Text from './Text';
-import TextSettings from './TextSettings';
+import Text from './Text'
+import TextSettings from './TextSettings'
 
 class Factory {
-
-  static createTextSettings = (type) : TextSettings => {
+  public static createTextSettings( type ) : TextSettings {
     const result: TextSettings = new TextSettings();
   
     switch ( type ) {
@@ -44,10 +43,9 @@ class Factory {
     return result;
   }
 
-  public static createText = ( settings: TextSettings, value: string ) => {
+  public static createText( settings: TextSettings, value: string ) {
     return new Text( settings, value )
   }
-
 }
 
 export default Factory;

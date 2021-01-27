@@ -1,12 +1,12 @@
-import Factory from "./Factory";
-import Limit from "./Limit";
-import Block from "./Block";
-import Position from "./Position";
-import { Scenario } from "./Scenario";
-import Scene from "./Scene";
+import Factory from "./Factory"
+import Limit from "./Limit"
+import Block from "./Block"
+import Position from "./Position"
+import { Scenario } from "./Scenario"
+import Scene from "./Scene"
 import CanvasObject from './CanvasObject'
-import Page from "./Page";
-import Size from "./Size";
+import Page from "./Page"
+import Size from "./Size"
 
 class Drawer {
   private canvas: HTMLCanvasElement = null;
