@@ -3,8 +3,7 @@ name: github pages
 # masterブランチにプッシュしたときjobsに記述した操作を行う
 on:
   push:
-    branches:
-    - main
+    branches: [ main ]
 
 jobs:
   build-deploy:
