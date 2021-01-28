@@ -34,6 +34,8 @@ const Container = () => {
   // contextを状態として持つ
   const [ context, setContext ] = useState( null );
 
+  const [ fileName, setFileName ] = useState( null );
+
   const [ pngList, setPngList ] = useState( null );
 
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
@@ -83,7 +85,8 @@ const Container = () => {
 
       const list = drawer.draw();
 
-      setPngList( list )
+      setPngList( list );
+      setFileName( files[ 0 ].name.split('.')[ 0 ] );
     }
   }
 
@@ -92,11 +95,11 @@ const Container = () => {
 
     const zip = new JSZip();
 
-    const folderName = 'test';
+    const folderName = fileName;
     const folder = zip.folder( folderName );
 
     for( let i = 0; i < pngList.length; i++ ) {
-      folder.file( `test_${ i }.png`, Convertor.base64ToBlob( pngList[ i ] ) );
+      folder.file( `${ fileName }_${ i }.png`, Convertor.base64ToBlob( pngList[ i ] ) );
     }
 
     zip.generateAsync( { type: 'blob' } ).then( blob => {
