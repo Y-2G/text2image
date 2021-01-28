@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div>
       <Head>
-        <title>Create Next App</title>
+        <title>テキスト作成ツール</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Container />
@@ -116,9 +116,6 @@ const Container = () => {
     const list = [];
     
     for( let i = 0; i < pngList.length; i++ ) {
-      <div>
-        
-      </div>
         list.push(
           <a key={ `a_${i}` } href={ pngList[ i ] } download={ `test_${i}.png` }>
             <img key={ `img_${i}` } src={ pngList[ i ] } alt="test" />
