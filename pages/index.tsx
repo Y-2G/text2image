@@ -120,8 +120,8 @@ const Container = () => {
     
     for( let i = 0; i < pngList.length; i++ ) {
         list.push(
-          <a key={ `a_${i}` } href={ pngList[ i ] } download={ `test_${i}.png` }>
-            <img key={ `img_${i}` } src={ pngList[ i ] } alt="test" />
+          <a key={ `a_${i}` } href={ pngList[ i ] } download={ `${ fileName }_${ i }.png` }>
+            <img key={ `img_${i}` } src={ pngList[ i ] } alt={ `${ fileName }_img` } />
           </a>
         );
     }
