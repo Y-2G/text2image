@@ -21,6 +21,9 @@ export default class Scene {
 
   public append( obj: CanvasObject ): any {
     const page = this.getTargetPage( obj );
+    
+    page.type = obj.type;
+
     page.append( obj );
   }
 
@@ -48,10 +51,8 @@ export default class Scene {
     const newType: string = obj.type  !== narration ? conversation : narration;
     
     if( curType === newType ) return false;
-
-    if( curType === narration && newType !== narration ) return true;
-
-    if( curType !== narration && newType === narration ) return true;
+    
+    return true;
   }
 
   public createPage() {
@@ -70,6 +71,6 @@ export default class Scene {
     }
 
     return result;
-}
+  }
 
 }
