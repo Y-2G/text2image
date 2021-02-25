@@ -9,6 +9,7 @@ import Vector from '../models/Vector'
 import Convertor from '../models/Convertor'
 import Drawer from '../models/Drawer'
 import Settings from '../models/Settings'
+import Loader from './loader'
 
 export default function Home() {
   return (
@@ -35,6 +36,8 @@ const Container = () => {
   const [ fileName, setFileName ] = useState( null );
 
   const [ pingList, setPingList ] = useState( null );
+  
+  const [ isLoading, setIsLoading ] = useState( false );
 
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
   useEffect( () => { initialize(); }, [] );
@@ -63,6 +66,8 @@ const Container = () => {
 
   // ファイル選択イベント
   const onChange = (e) => {
+    setIsLoading( true );
+
     const files = e.target.files;
 
     if( files.length < 1 ) return;
@@ -79,7 +84,10 @@ const Container = () => {
       setPingList( list );
 
       setFileName( files[ 0 ].name.split('.')[ 0 ] );
+
+      setIsLoading( false );
     }
+
   }
   
   // ラジオボタン選択イベント
@@ -156,6 +164,8 @@ const Container = () => {
       </div>
       
       <div className={styles.preview}>{ renderImgList() }</div>
+
+      <Loader visible={ isLoading ? 'visible' : 'hidden' } />
     </div>
   );
 }

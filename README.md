@@ -10,25 +10,96 @@ npm run dev
 yarn dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+テキスト作成ツール ver.0.1.1<br>
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+Ⅰ.テキスト作成ツールの使用方法について<br>
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+  1.URL<br>
+    https://text2image.vercel.app/<br>
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+  2.テキスト作成ツール管理表<br>
+    (1) URL<br>
+      https://docs.google.com/spreadsheets/d/1jE1B8t6SI4rhXNJZxcjJk1Dt1vqeJ7TJKiMSijwdR5o/edit#gid=0<br>
 
-## Learn More
+  3.使い方<br>
+    (1) 任意のブラウザで上記URLにアクセスする<br>
+    (2) "ファイルを選択ボタン"をクリックする<br>
+    (3) フォーマットにそったテキストファイルを選択する<br>
+    (4) プログラムが画像を作成する<br>
+    (5) "download all"または画像リンクをクリックする<br>
+    (6) 画像ファイルがダウンロードされる<br>
 
-To learn more about Next.js, take a look at the following resources:
+  4.テキストファイルフォーマット<br>
+    (1) 半角英字「N/A/B/C/E」で区切る<br>
+    (2) 区切り文字から次の区切り文字までの間の文章が画像になる<br>
+    (3) 上記(2)の後から次の文章までの間に余白が挿入される<br>
+    (4) 3行程度の文章ごとに区切り文字を挿入するのがおすすめ<br>
+    (5) 以下、各種区切り文字の詳細<br>
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    N<br>
+      ナレーション。<br>
+      オープニング、エンディングのテキストに使用する。<br>
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+    A<br>
+      語りA。<br>
+      主人公のテキストに使用する。<br>
 
-## Deploy on Vercel
+    B<br>
+      語りB。<br>
+      主人公に敵対する人物のテキストに使用する。<br>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/import?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    C<br>
+      語りC。<br>
+      上記A、B以外の登場人物のテキストに使用する。<br>
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+    E<br>
+      エンド。<br>
+      シナリオの最後に記載する。<br>
+
+    ※詳細は"サンプルシナリオ"シートを参照してください<br>
+    ※上記の英字は半角としてください<br>
+    ※シナリオ文中に上記の英字が出てくる場合は大文字としてください<br>
+    ※３人以上の語り手が出てくる場合は要相談<br>
+
+
+Ⅱ.テキスト作成ツールのための文章の最適化について
+
+  1.概要<br>
+    テキスト作成ツールを使っていて、きれいに折り返せないことがあるかと思います。<br>
+    現状ではシステムで適切な折り返しの位置を判断するのは非常に難しいです。<br>
+    そのため、手動でテキストを調整する作業がどうしても必要になります。<br>
+    この文書では、そのためのおすすめの方法と環境を構築する手順を紹介します。<br>
+
+  2.方法<br>
+    テキストエディタで補助線を引く<br>
+
+  3.環境構築手順<br>
+    (1) "Visual Studio Code"をインストールする<br>
+    *ダウンロードページ: https://azure.microsoft.com/ja-jp/products/visual-studio-code/<br>
+
+    (2) "Visual Studio Code"を開き、左下の歯車マークをクリックする<br>
+
+    (3) "Settings"を選択する<br>
+
+    (4) 一番上のテキストボックスに"rulers"と入力しする<br>
+
+    (5) "Editor: Rulers"という項目の"Edit in settings.json"をクリックする<br>
+
+    (6) "settings.json"というファイルが開く<br>
+
+    (7) "settings.json"のすでにある部分を削除し、以下のコードを貼り付ける<br>
+
+    {<br>
+      editor.rulers: [30,36],<br>
+      workbench.colorCustomizations: {"editorRuler.foreground": "#00FF00"},<br>
+    }<br>
+
+    (8) "settings.json"の変更を保存する<br>
+
+    (9) 補助線が2つ表示される<br>
+
+  4.備考<br>
+    上記"3.環境構築手順"を終えると補助線が2つ表示されます。<br>
+    目安として、補助線を超えた部分が折り返されます。<br>
+    2つの補助線のうち、右側にあるものはナレーション用です。<br>
+    左側の補助線はセリフ用です。<br>
