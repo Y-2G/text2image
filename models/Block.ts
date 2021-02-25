@@ -1,35 +1,57 @@
-import CanvasObject from './CanvasObject'
+import CanvasObject from './CanvasObject';
 
-class Block extends CanvasObject {
-  protected _type: string = '';
-  protected _content: CanvasObject[] = [];
+export default class Block extends CanvasObject {
+  protected _content: Array<CanvasObject> = [];
 
-  public get content(): CanvasObject[] {
+  constructor() {
+    super();
+  }
+  
+  public get content(): Array<CanvasObject> {
     return this._content;
   }
 
-  public set content( content: CanvasObject[] ) {
-    this._content = content;
+  public get settings(): any {
+    return this._content[ 0 ].settings;
+  }
+  
+  public get text(): Array<CanvasObject> {
+    let result = [];
+
+    for( let i = 0; i < this._content.length; i++ ) {
+      result = result.concat( this._content[ i ].text );
+    }
+    
+    return result;
+  }
+
+  public move( x: number, y: number ) {
+    for( let i = 0; i < this._content.length; i++ ) {
+      this._content[ i ].move( x, y );
+    }
+  }
+
+  public reset( x: number, y: number ) {
+    for( let i = 0; i < this._content.length; i++ ) {
+      this._content[ i ].reset( x, y );
+    }
   }
 
   public append( obj: CanvasObject ): void {
-    this.content.push( obj );
+    obj.move( 0, this._size.height );
+
+    this._size.width = obj.size.width > this._size.width ? obj.size.width : this._size.width;
     
-    const w = obj.position.x + obj.size.width;
-    const h = obj.position.y + obj.size.height;
-    
-    if( w > this.size.width )  this.size.width = w;
-    if( h > this.size.height ) this.size.height = h;
+    this._size.height = this._size.height + obj.size.height;
+
+    this._content.push( obj );
   }
 
-  public move( x: number, y: number ): void {
-    this.position.move( x, y );
-    this.content.forEach( e => e.move( x, y ) );
-  }
-
-  public adjust(): void {
-    throw 'error';
+  public concat( obj: Block ): Block {
+    for( let i = 0; i < obj.content.length; i++ ) {
+      this.append( obj.content[ i ] );
+    }
+    
+    return this;
   }
 }
-
-export default Block;

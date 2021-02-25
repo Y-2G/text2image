@@ -1,13 +1,16 @@
-import TextSettings from './TextSettings'
-import CanvasObject from './CanvasObject'
+import CanvasObject from './CanvasObject';
 
-class Text extends CanvasObject {
-  protected _settings: TextSettings = null;
+export default class Text extends CanvasObject {
+
   protected _content: string = '';
 
-  constructor( settings: TextSettings, content: string ) {
+  protected _settings: any = null;
+
+  constructor() {
     super();
-    this._settings = settings;
+  }
+
+  public set content( content: string ) {
     this._content = content;
   }
 
@@ -15,15 +18,23 @@ class Text extends CanvasObject {
     return this._content;
   }
 
-  public get settings(): TextSettings {
+  public set settings( settings: any ) {
+    this._settings = settings;
+  }
+
+  public get settings(): any {
     return this._settings;
+  }
+
+  public get text() {
+    return this;
   }
 
   public move( x: number, y: number ) {
     this.position.move( x, y );
   }
-  
-  public adjust(): void {}
-}
 
-export default Text;
+  public reset( x: number, y: number ) {
+    this.position.reset( x, y );
+  }
+}

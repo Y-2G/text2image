@@ -1,61 +1,61 @@
-import Block from './Block'
+import Size from './Size';
+import Block from './Block';
+import CanvasObject from './CanvasObject';
 
-class Page extends Block {
-  protected _type: string = '';
-  protected _content: Block[] = [];
+export default class Page extends Block {
+  protected _content: Array<CanvasObject> = [];
 
-  public get type(): string {
-    return this._type;
-  }
-
-  public get content(): Block[] {
+  public get content(): Array<CanvasObject> {
     return this._content;
   }
 
-  public constructor( size ) {
+  constructor( size: Size ) {
     super();
-    this._size.width = size.width;
-    this._size.height = size.height;
+    this._size = size;
   }
 
-  public append( obj: Block ): void {
-    this.content.push( obj );
-    this.size.height += obj.size.height;
+  public append( obj: CanvasObject ): any {
+    const sum = this._content.reduce( ( a: number, c: CanvasObject ) => a + c.size.height, 0 );
+
+    obj.move( 0, sum );
+
+    return this._content.push( obj );
   }
 
-  public adjust(): void {
-    this.adjustX();
-    this.adjustY();
+  public hasSpace( obj ): boolean {
+    const sum = this._content.reduce( ( a: number, c: CanvasObject ) => a + c.size.height, 0 );
+    return sum + obj.size.height < this._size.height;
   }
 
-  public adjustX(): void {
-    const right = this.size.width - this.getMaxWidthByType( 'A' );
-    for( let i = 0; i < this.content.length; i++ ) {
-      const child = this.content[ i ];
-      if( child.type !== 'A' ) continue;
-      child.move( right, 0 );
-    }
+  public adjustPosition(): void {
+    this.adjustPositionX();
   }
 
-  public adjustY(): void {
-    let y: number = 0;
-    for( let i = 0; i < this.content.length; i++ ) {
-      const child = this.content[ i ];
-      child.move( 0, y );
-      y += child.size.height;
+  public adjustPositionX(): void {
+    const right = this._size.width - this.getMaxWidthByType( 'A' );
+
+    for( let i = 0; i < this.text.length; i++ ) {
+      const child = this.text[ i ];
+
+      if( child.settings.align === 'left' ) continue;
+
+      if( child.settings.align === 'right' ) child.move( right, 0 );
+
+      if( child.settings.align === 'center' ) child.move( (this._size.width - child.size.width) / 2, 0 );
     }
   }
 
   public getMaxWidthByType( type: string ): number {
     let width: number = 0;
-    for( let i = 0; i < this.content.length; i++ ) {
-      const child = this.content[ i ];
-      if( child.type !== type ) continue;
+
+    for( let i = 0; i < this._content.length; i++ ) {
+      const child = this._content[ i ];
+
+      if( child.settings.type !== type ) continue;
+
       if( child.size.width > width ) width = child.size.width;
     }
+
     return width;
   }
-
 }
-
-export default Page;

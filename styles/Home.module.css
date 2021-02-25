@@ -1,18 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap');
+
 .container {
     width: 100%;
     padding: 24px;
+    font-family: 'Noto Sans JP', sans-serif;
 }
 
 .canvas {
     display: none;
 }
 
+.header {
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.title {
+    font-size: 24px;
+    margin: 0;
+}   
+
 .form {
     width: 100%;
     margin-bottom: 24px;
 }
 
-.form .button {
+.settings {
+    width: 100%;
+    padding: 12px;
+    background: #eee;
+    margin-bottom: 24px;
+    border-radius: 8px;
+    border: 1px solid #E0E0E0;
+}
+
+.subtitle {
+    font-size: 18px;
+    margin: 0;
+}   
+
+.table {
+    font-size: 14px;
+}
+
+.kind {
+    margin: 0;
+    padding: 0;
+}
+
+.label {
+    margin-left: 12px;
+}
+
+.label:first-child {
+    margin-left: 0;
+}
+
+.file {
+    font-family: inherit;
+}
+
+.button {
+    font-family: inherit;
     margin-left: 24px;
 }
 
@@ -20,29 +69,26 @@
     width: 100%;
 }
 
-.preview a {
+.preview > a {
+    display: inline-block;
     font-size: 0;
-    display: inline-block;
-    width: calc( 20% - 12px );
-    border: 1px solid #ccc;
-    margin-right: 15px;
-    margin-bottom: 15px;
+    width: 20%;
+    padding: 12px;
 }
 
-.preview a:nth-child(5n) {
-    margin-right: 0;
-}
-
-.preview img {
+.preview > a > img {
     width: 100%;
-}
-
-.preview a {
-    display: inline-block;
+    border: 1px solid #ccc;
 }
 
 @media screen and (max-width: 900px) {
     .preview a {
-        width: calc( 33.3333% - 12px );
+        width: 33.3333%;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    .preview a {
+        width: 100%;
     }
 }
