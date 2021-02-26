@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react'
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
-
+// Models
 import JSZip from 'jszip'
 
 import Limit from '../models/Limit'
 import Vector from '../models/Vector'
-import Convertor from '../models/Convertor'
 import Drawer from '../models/Drawer'
 import Settings from '../models/Settings'
+import Convertor from '../models/Convertor'
+import Context from '../models/Context'
+import ContextForText from '../models/ContextForText'
+
+// Components
+import React, { useState, useEffect } from 'react'
+import Head from 'next/head'
+
 import Loader from './loader'
+
+// Styles
+import styles from '../styles/Home.module.css'
 
 export default function Home() {
   return (
@@ -65,7 +72,7 @@ const Container = () => {
   }
 
   // ファイル選択イベント
-  const onChange = (e) => {
+  const onChangeFile = e => {
     setIsLoading( true );
 
     const files = e.target.files;
@@ -77,7 +84,9 @@ const Container = () => {
     reader.readAsText( files[ 0 ] );
     
     reader.onload = () => {
-      const drawer: Drawer = new Drawer( reader, settings );
+      const constext: Context = new Context( reader );
+
+      const drawer: Drawer = new Drawer( constext, settings );
 
       const list = drawer.draw();
 
@@ -87,11 +96,10 @@ const Container = () => {
 
       setIsLoading( false );
     }
-
   }
   
   // ラジオボタン選択イベント
-  const onChangeRadio = e => {
+  const onChangeRadioNaAlign = e => {
     const alignNA = e.target.id;
     settings.text['N'].align = alignNA;
     setSettings( settings );
@@ -126,14 +134,39 @@ const Container = () => {
     const list = [];
     
     for( let i = 0; i < pingList.length; i++ ) {
-        list.push(
-          <a key={ `a_${i}` } href={ pingList[ i ] } download={ `${ fileName }_${ i }.png` }>
-            <img key={ `img_${i}` } src={ pingList[ i ] } alt={ `${ fileName }_img` } />
-          </a>
-        );
+      list.push(
+        <a key={ `a_${i}` } href={ pingList[ i ] } download={ `${ fileName }_${ i }.png` }>
+          <img key={ `img_${i}` } src={ pingList[ i ] } alt={ `${ fileName }_img` } />
+        </a>
+      );
     }
 
     return list;
+  }
+
+  const onChangeRadioTextType = e => {
+
+  }
+
+  const onChangeTextPartialDraw = e => {
+    if( e.target.value === '' )return;
+
+    setIsLoading( true );
+
+    console.log( e.target.value )
+
+    const context = new ContextForText( { type: 'N', value: e.target.value } );
+
+    const drawer: Drawer = new Drawer( context, settings );
+
+    const list = drawer.draw();
+
+    setPingList( list );
+
+    setFileName( 'test' );
+
+    setIsLoading( false );
+
   }
 
   return (
@@ -142,30 +175,61 @@ const Container = () => {
         <h1 className={ styles.title }>テキスト作成ツール</h1>
       </header>
       
-      <canvas id="canvas" className={ styles.canvas } width={ CANVAS_WIDTH } height={ CANVAS_HEIGHT }></canvas>
-      
-      <div className={ styles.form }>
-        <div className={ styles.settings }>
-          <h2 className={ styles.subtitle }>設定</h2>
+      <div className={ styles.aside }>
+        <section className={ styles.section }>
+          <div className={ styles.row }>
+            <h2 className={ styles.subtitle }>設定</h2>
+          </div>
           <dl className={ styles.table }>
             <dt className={ styles.kind }>ナレーション</dt>
             <dd className={ styles.detail }>
-              <label htmlFor="left" className={ styles.label }>左寄せ</label>
-              <input id="left" className={ styles.radio } type="radio" name="na" onChange={ onChangeRadio } defaultChecked />
-              <label htmlFor="center" className={ styles.label }>中央寄せ</label>
-              <input id="center" className={ styles.radio } type="radio" name="na" onChange={ onChangeRadio } />
+              <div>
+                <label htmlFor="textAlignNL" className={ styles.label }>左寄せ</label>
+                <input id="textAlignNL" className={ styles.radio } type="radio" name="text-align-n" onChange={ onChangeRadioNaAlign } defaultChecked />
+              </div>
+              <div>
+                <label htmlFor="textAlignNC" className={ styles.label }>中央寄せ</label>
+                <input id="textAlignNC" className={ styles.radio } type="radio" name="text-align-n" onChange={ onChangeRadioNaAlign } />
+              </div>
             </dd>
           </dl>
+        </section>
+      </div>
+
+      <div className={ styles.main }>
+        <div className={ styles[ 'canvas-holder' ] }>
+          <canvas id="canvas" className={ styles.canvas } width={ CANVAS_WIDTH } height={ CANVAS_HEIGHT }></canvas>
         </div>
 
-        <input className={ styles.file } type="file" onChange={ onChange } />
-        <Button className={ styles.button } value="すべてダウンロードする" onClick={ onClickDownloadAll } />
-      
-      </div>
-      
-      <div className={styles.preview}>{ renderImgList() }</div>
+        <div className={ styles.row }>
+          <input id="textPartial" className={ styles.radio } type="text" name="text" onChange={ onChangeTextPartialDraw } />
+          <div className={ styles[ 'input-group' ] }>
+            <label htmlFor="textTypeN" className={ styles.label }>ナレーション</label>
+            <input id="textTypeN" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } defaultChecked />
+          </div>
+          <div className={ styles[ 'input-group' ] }>
+            <label htmlFor="textTypeA" className={ styles.label }>会話A</label>
+            <input id="textTypeA" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
+          </div>
+          <div className={ styles[ 'input-group' ] }>
+            <label htmlFor="textTypeB" className={ styles.label }>会話B</label>
+            <input id="textTypeB" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
+          </div>
+          <div className={ styles[ 'input-group' ] }>
+            <label htmlFor="textTypeC" className={ styles.label }>会話C</label>
+            <input id="textTypeC" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
+          </div>
+        </div>
 
-      <Loader visible={ isLoading ? 'visible' : 'hidden' } />
+        <div className={ styles.row }>
+          <input className={ styles.file } type="file" onChange={ onChangeFile } />
+          <Button className={ styles.button } value="すべてダウンロードする" onClick={ onClickDownloadAll } />
+        </div>
+      
+        <div className={styles.preview}>{ renderImgList() }</div>
+      </div>
+
+      <Loader visible={ isLoading === true ? 'visible' : 'hidden' } />
     </div>
   );
 }

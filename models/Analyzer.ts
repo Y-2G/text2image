@@ -32,6 +32,7 @@ export default class Analyzer {
   public execute() {
     const w: number = this.settings.limit.max.x - this.settings.limit.min.x;
     const y: number = this.settings.limit.max.y - this.settings.limit.min.y;
+    
     this._scene = new Scene();
     this._scene.size = new Size( w, y );
 

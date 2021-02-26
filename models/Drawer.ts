@@ -9,10 +9,10 @@ export default class Drawer {
 
   private _settings;
 
-  public constructor( reader, settings ) {
+  public constructor( context, settings ) {
     this._settings = settings;
 
-    this._context = new Context( reader );
+    this._context = context;
     
     this._analyzer = new Analyzer( this._context, settings );
   }
