@@ -1,30 +1,63 @@
+import Text from './Text';
 import Size from './Size';
-import Block from './Block';
-import CanvasObject from './CanvasObject';
+import Paragraph from './Paragraph';
 
-export default class Page extends Block {
-  protected _content: Array<CanvasObject> = [];
+class Page {
+  private _type: string = '';
 
-  public get content(): Array<CanvasObject> {
-    return this._content;
+  private _list: Array<Paragraph> = [];
+
+  private _size = new Size();
+
+  private MIN_X = 220;
+  private MAX_X = 1700;
+  private MIN_Y = 200;
+  private MAX_Y = 970;
+
+  public get type(): string {
+    return this._type;
   }
 
-  constructor( size: Size ) {
-    super();
-    this._size = size;
+  public set type( type: string ) {
+    this._type = type;
   }
 
-  public append( obj: CanvasObject ): any {
-    const sum = this._content.reduce( ( a: number, c: CanvasObject ) => a + c.size.height, 0 );
+  public get width(): number {
+    return this._size.width;
+  }
 
-    obj.move( 0, sum );
+  public get height(): number {
+    return this._size.height;
+  }
 
-    return this._content.push( obj );
+  public get maxWidth(): number {
+    return this.MAX_X - this.MIN_X;
+  }
+
+  public get maxHeight(): number {
+    return this.MAX_Y - this.MIN_Y;
+  }
+
+  public get list(): Array<Text> {
+    return this._list.reduce( ( a, b ) => a.concat( b.list ), []);
+  }
+
+  public get paragraphs(): Array<Paragraph> {
+    return this._list;
+  }
+
+  public append( obj: Paragraph ): void {
+    obj.move( 0, this.height );
+    
+    this._list.push( obj );
+
+    this._size.height = this.height + obj.height;
+
+    if( this.width > obj.width ) this._size.width = obj.width;
   }
 
   public hasSpace( obj ): boolean {
-    const sum = this._content.reduce( ( a: number, c: CanvasObject ) => a + c.size.height, 0 );
-    return sum + obj.size.height < this._size.height;
+    return this.height + obj.height < this.maxHeight;
   }
 
   public adjustPosition(): void {
@@ -32,30 +65,23 @@ export default class Page extends Block {
   }
 
   public adjustPositionX(): void {
-    const right = this._size.width - this.getMaxWidthByType( 'A' );
+    const right = this.maxWidth - this.getMaxWidthByType( 'A' );
 
-    for( let i = 0; i < this.text.length; i++ ) {
-      const child = this.text[ i ];
+    const list: Array<Text> = this.list;
 
-      if( child.settings.align === 'left' ) continue;
+    for( let i = 0; i < list.length; i++ ) {
+      if( list[ i ].settings.align === 'left' ) continue;
 
-      if( child.settings.align === 'right' ) child.move( right, 0 );
+      if( list[ i ].settings.align === 'right' ) list[ i ].reset( right, list[ i ].position.y );
 
-      if( child.settings.align === 'center' ) child.move( (this._size.width - child.size.width) / 2, 0 );
+      if( list[ i ].settings.align === 'center' ) list[ i ].move( ( this.maxWidth - list[ i ].width ) / 2, 0 );
     }
   }
 
   public getMaxWidthByType( type: string ): number {
-    let width: number = 0;
-
-    for( let i = 0; i < this._content.length; i++ ) {
-      const child = this._content[ i ];
-
-      if( child.settings.type !== type ) continue;
-
-      if( child.size.width > width ) width = child.size.width;
-    }
-
-    return width;
+    const list: Array<Text> = this.list.filter( e => e.settings.type === type );
+    return list.reduce( ( max: number, obj:Text ) => Math.max( max, obj.width ), 0 );
   }
 }
+
+export default Page;
