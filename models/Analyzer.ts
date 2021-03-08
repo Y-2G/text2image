@@ -1,8 +1,8 @@
 import Text from './Text';
 import Size from './Size';
-import Block from './Block';
 import Scene from './Scene';
 import Context from './Context';
+import Paragraph from './Paragraph';
 
 export default class Analyzer {
 
@@ -52,24 +52,20 @@ export default class Analyzer {
 
   public createParagraph( token ) {
     const type = token.type;
-
     const value = token.value;
-    
-    const paragraph: Block = new Block();
-   
-    paragraph.type = type;
 
-    let sentence: Block = null;
+    let sentence: Array<Text> = [];
 
     for( let i = 0; i < value.length; i++ ) {
-      sentence = this.createSentence( type, value[ i ] );
-      paragraph.append( sentence );
+      sentence = sentence.concat( this.createSentence( type, value[ i ] ) );
     }
 
-    const marginBottom = paragraph.size.height * 0.6;
+    const paragraph: Paragraph = new Paragraph();
+    paragraph.type = token.type;
+    paragraph.margin = 40;
 
-    paragraph.size.height = paragraph.size.height + marginBottom;
-    
+    sentence.forEach( e => paragraph.append( e ) );
+
     return paragraph;
   }
 
@@ -83,13 +79,11 @@ export default class Analyzer {
 
     context.font = `${ settings.size }px ${ settings.font }`;
 
-    const sentence: Block = new Block();
-
-    sentence.type = type;
-
     let p: number = 0;
     let v: string = '';
     let m: TextMetrics = null;
+
+    const result: Array<Text> = [];
 
     for( let i = 0; i < value.length; i++ ) {
       // slice で最後の文字まで切り出すため i + 1 をしている
@@ -97,16 +91,16 @@ export default class Analyzer {
 
       m = context.measureText( v );
 
-      if( i === value.length - 1 ) sentence.append( this.createText( type, settings, v, m ) );
+      if( i === value.length - 1 ) result.push( this.createText( type, settings, v, m ) );
 
       if( m.width <= limit ) continue;
 
-      sentence.append( this.createText( type, settings, v, m ) );
+      result.push( this.createText( type, settings, v, m ) );
 
       p = i;
     }
 
-    return sentence;
+    return result;
   }
 
   public createText( t, s, v, m ) {
@@ -117,11 +111,13 @@ export default class Analyzer {
     
     text.type = t;
 
-    text.content = v;
+    text.value = v;
     
     text.settings = s;
     
     text.size = new Size( w, h );
+
+    text.margin = 0;
 
     return text;
   }
@@ -142,10 +138,10 @@ export default class Analyzer {
     const x: number = this.settings.limit.min.x;
     const y: number = this.settings.limit.min.y;
 
-    const textList: Array<Text> = this._scene.text;
+    const paragraphs: Array<Paragraph> = this._scene.paragraphs;
     
-    for( let i = 0; i < textList.length; i++ ) {
-      textList[ i ].move( x, y );
+    for( let i = 0; i < paragraphs.length; i++ ) {
+      paragraphs[ i ].move( x, y );
     }
   }
 }

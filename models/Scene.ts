@@ -1,6 +1,6 @@
 import Size from './Size';
 import Page from './Page';
-import CanvasObject from './CanvasObject';
+import Paragraph from './Paragraph';
 
 export default class Scene {
   private _size: Size = new Size();
@@ -19,7 +19,7 @@ export default class Scene {
     this._size = size;
   }
 
-  public append( obj: CanvasObject ): any {
+  public append( obj: Paragraph ): any {
     const page = this.getTargetPage( obj );
     
     page.type = obj.type;
@@ -27,7 +27,7 @@ export default class Scene {
     page.append( obj );
   }
 
-  public getTargetPage( obj: CanvasObject ) {
+  public getTargetPage( obj: Paragraph ) {
     if( this._content.length === 0 ) return this.createPage();
     
     if( this.isSeparatePage( obj ) === true ) return this.createPage();
@@ -39,7 +39,7 @@ export default class Scene {
     return this.createPage();
   }
 
-  public isSeparatePage( obj: CanvasObject ) {
+  public isSeparatePage( obj: Paragraph ) {
     if( this._content.length === 0 ) return false;
 
     const page: Page = this._content.slice( -1 )[ 0 ];
@@ -56,18 +56,28 @@ export default class Scene {
   }
 
   public createPage() {
-    const page = new Page( this._size );
+    const page = new Page();
     
     this._content.push( page );
     
     return page;
   }
 
-  public get text() {
-   let result = [];
+  public get textList() {
+    let result = [];
 
     for( let i = 0; i < this._content.length; i++ ) {
-      result = result.concat( this._content[ i ].text )
+      result = result.concat( this._content[ i ].list );
+    }
+
+    return result;
+  }
+
+  public get paragraphs(): Array<Paragraph> {
+    let result: Array<Paragraph> = [];
+
+    for( let i = 0; i < this._content.length; i++ ) {
+      result = result.concat( this._content[ i ].paragraphs );
     }
 
     return result;

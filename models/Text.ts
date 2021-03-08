@@ -1,33 +1,73 @@
-import CanvasObject from './CanvasObject';
+import Size from './Size';
+import Position from './Position';
 
-export default class Text extends CanvasObject {
+class Text {
+  private _type: string = '';
 
-  protected _content: string = '';
+  private _value: string = '';
 
-  protected _settings: any = null;
+  private _size: Size = new Size();
 
-  constructor() {
-    super();
+  private _position: Position = new Position();
+
+  private _settings: any = null;
+
+  private _margin: number = 0;
+
+  public get type(): string {
+    return this._type;
+  }
+  
+  public set type( type: string ) {
+    this._type = type;
   }
 
-  public set content( content: string ) {
-    this._content = content;
+  public get value(): string {
+    return this._value;
   }
 
-  public get content(): string {
-    return this._content;
+  public set value( value: string ){
+    this._value = value;
   }
 
-  public set settings( settings: any ) {
-    this._settings = settings;
+  public get size(): Size {
+    return this._size;
+  }
+
+  public set size( size: Size ) {
+    this._size = size;
+  }
+
+  public get position(): Position {
+    return this._position;
+  }
+
+  public set position( position: Position ) {
+    this._position = position;
   }
 
   public get settings(): any {
     return this._settings;
   }
 
-  public get text() {
-    return this;
+  public set settings( settings: any ) {
+    this._settings = settings;
+  }
+
+  public get margin(): number {
+    return this._margin;
+  }
+  
+  public set margin( margin: number ) {
+    this._margin = margin;
+  }
+
+  public get width(): number {
+    return this._size.width;
+  }
+
+  public get height(): number {
+    return this._size.height + this._margin;
   }
 
   public move( x: number, y: number ) {
@@ -38,3 +78,5 @@ export default class Text extends CanvasObject {
     this.position.reset( x, y );
   }
 }
+
+export default Text;

@@ -3,11 +3,10 @@ import JSZip from 'jszip'
 
 import Limit from '../models/Limit'
 import Vector from '../models/Vector'
-import Drawer from '../models/Drawer'
 import Settings from '../models/Settings'
 import Convertor from '../models/Convertor'
 import Context from '../models/Context'
-import ContextForText from '../models/ContextForText'
+import Analyzer from '../models/Analyzer'
 
 // Components
 import React, { useState, useEffect } from 'react'
@@ -17,6 +16,8 @@ import Loader from './loader'
 
 // Styles
 import styles from '../styles/Home.module.css'
+import Preview from '../models/Preview'
+import { render } from 'react-dom'
 
 export default function Home() {
   return (
@@ -46,10 +47,19 @@ const Container = () => {
   
   const [ isLoading, setIsLoading ] = useState( false );
 
+  const [ preview, setPreview ] = useState( null );
+
+  const [ selectedObject, setSelectedObject ] = useState( null );
+
+  const [ modalState, setModalState ] = useState( 'hidden' );
+
+  const [ position, setPosition ] = useState( { x: 0, y: 0 } );
+
+  const [ textBoxValue, setTextBoxValue ] = useState( '' );
+
+
   // コンポーネントの初期化完了後コンポーネント状態にコンテキストを登録
   useEffect( () => { initialize(); }, [] );
-
-  useEffect( () => { renderImgList(); }, [ pingList ] );
 
   const initialize = () => {
     const canvas: any = document.getElementById( 'canvas' );
@@ -71,6 +81,14 @@ const Container = () => {
     setSettings( settings );
   }
 
+  // ラジオボタン選択イベント
+  const onChangeRadioNaAlign = e => {
+    const alignNA = e.target.value;
+    settings.text['N'].align = alignNA;
+
+    setSettings( settings );
+  }
+  
   // ファイル選択イベント
   const onChangeFile = e => {
     setIsLoading( true );
@@ -83,90 +101,241 @@ const Container = () => {
     
     reader.readAsText( files[ 0 ] );
     
-    reader.onload = () => {
-      const constext: Context = new Context( reader );
+    reader.onload = async () => {
+      
+      const name: string = files[ 0 ].name.split('.')[ 0 ];
 
-      const drawer: Drawer = new Drawer( constext, settings );
-
-      const list = drawer.draw();
+      const context: Context = new Context( reader );
+      const analyzer = new Analyzer( context, settings );
+      const scene = analyzer.execute();
+      const preview = new Preview( scene );
+      const list = preview.createListPerParagraph();
 
       setPingList( list );
-
-      setFileName( files[ 0 ].name.split('.')[ 0 ] );
+      setFileName( name );
+      setPreview( preview );
 
       setIsLoading( false );
     }
   }
-  
-  // ラジオボタン選択イベント
-  const onChangeRadioNaAlign = e => {
-    const alignNA = e.target.id;
-    settings.text['N'].align = alignNA;
-    setSettings( settings );
-  }
 
-  const onClickDownloadAll = () => {
+  // クリックイベント
+  const onClickAllDownloadButton = () => {
     if( pingList === null ) return;
 
+    setIsLoading( true );
+    
     const zip = new JSZip();
-
+    
     const folderName = fileName;
     const folder = zip.folder( folderName );
-
+    
     for( let i = 0; i < pingList.length; i++ ) {
-      folder.file( `${ fileName }_${ i }.png`, Convertor.base64ToBlob( pingList[ i ] ) );
+      folder.file( `${ fileName }_${ i }.png`, Convertor.base64ToBlob( pingList[ i ].image ) );
     }
-
+    
     zip.generateAsync( { type: 'blob' } ).then( blob => {
       const url = URL.createObjectURL( blob );
       
       const link = document.createElement( 'a' );
       link.href = url;
       link.download = `${ folderName }.zip`;
-
+      
       link.click();
+
+      setIsLoading( false );
+
     } );
   }
+  
+  const onClickDownloadButton = () => {
+    if( selectedObject === null ) return;
 
-  const renderImgList = () => {
-    if( pingList === null ) return;
+    const link = document.createElement( 'a' );
+    link.href = selectedObject.image;
+    link.download = `scene_${ selectedObject.id }.png`;
+
+    link.click();
+  }
+
+  const onClickPreviewItem = item => {
+    const canvas: any = document.getElementById( 'canvas' );
+    const context: any = canvas.getContext( '2d' );
+    context.clearRect(0, 0,  canvas.width, canvas.height );
+
+    const paragraph = item.text;
+    
+    for( let i = 0; i < paragraph.list.length; i++ ) {
+      const text = paragraph.list[ i ];
+  
+      const v: string = text.value;
+      const x: number = text.position.x;
+      const y: number = text.position.y;
+  
+      // フォントを設定する
+      context.font = `${ text.settings.size }px ${ text.settings.font }`;
+      context.fillStyle = text.settings.color;
+  
+      // アウトラインを設定する
+      context.lineWidth = 3;
+      context.strokeStyle = text.settings.outline;
+  
+      // ドロップシャドウを設定する
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 3;
+      context.shadowOffsetY = 1;
+      context.shadowColor = text.settings.outline;
+  
+      // テキストを描画する
+      context.strokeText( v, x, y );
+      context.fillText( v, x, y );
+    }
+
+    setSelectedObject( item );
+    setPosition( { x: paragraph.position.x, y: paragraph.position.y } );
+
+    setModalState( 'visible' );
+  }
+
+  const renderPreview = () => {
+    if( pingList === null ) {
+      return (
+        <div className={styles.empty }>プレビュー</div>
+      );
+    }
 
     const list = [];
     
     for( let i = 0; i < pingList.length; i++ ) {
+      const item = pingList[ i ];
+      
       list.push(
-        <a key={ `a_${i}` } href={ pingList[ i ] } download={ `${ fileName }_${ i }.png` }>
-          <img key={ `img_${i}` } src={ pingList[ i ] } alt={ `${ fileName }_img` } />
-        </a>
+        <span key={ `span_${i}` } onClick={ () => onClickPreviewItem( item ) }>
+          <img key={ `img_${i}` } src={ item.image } alt={ `${ fileName }_img` } />
+        </span>
       );
     }
 
     return list;
   }
 
-  const onChangeRadioTextType = e => {
+  const onChangeTextBox = ( event, obj ) => {
+    if( selectedObject === null ) return;
 
-  }
+    const canvas: any = document.getElementById( 'canvas' );
+    const context: any = canvas.getContext( '2d' );
+    context.clearRect(0, 0,  canvas.width, canvas.height );
 
-  const onChangeTextPartialDraw = e => {
-    if( e.target.value === '' )return;
+    const paragraph = selectedObject.text;
+    
+    const id = selectedObject.id;
+    obj.value = event.target.value;
 
-    setIsLoading( true );
-
-    console.log( e.target.value )
-
-    const context = new ContextForText( { type: 'N', value: e.target.value } );
-
-    const drawer: Drawer = new Drawer( context, settings );
-
-    const list = drawer.draw();
+    for( let i = 0; i < paragraph.list.length; i++ ) {
+      const text = paragraph.list[ i ];
+  
+      const v: string = text.value;
+      const x: number = text.position.x;
+      const y: number = text.position.y;
+  
+      // フォントを設定する
+      context.font = `${ text.settings.size }px ${ text.settings.font }`;
+      context.fillStyle = text.settings.color;
+  
+      // アウトラインを設定する
+      context.lineWidth = 3;
+      context.strokeStyle = text.settings.outline;
+  
+      // ドロップシャドウを設定する
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 3;
+      context.shadowOffsetY = 1;
+      context.shadowColor = text.settings.outline;
+  
+      // テキストを描画する
+      context.strokeText( v, x, y );
+      context.fillText( v, x, y );
+    }
+    
+    const list = preview.updateList( id, )
 
     setPingList( list );
+    setTextBoxValue( event.target.value );
+  }
 
-    setFileName( 'test' );
+  const renderTextBoxes = () => {
+    if( selectedObject === null ) return;
 
-    setIsLoading( false );
+    const list = [];
 
+    const paragraph = selectedObject.text;
+
+    for( let i = 0; i < paragraph.list.length; i++ ) {
+      const obj = paragraph.list[ i ];
+
+      list.push(
+        <div key={`row_${i}`} className={ styles.row }>
+          <input
+            key={`text-box_${i}`}
+            id="textBox"
+            className={ styles[ 'text-box' ] }
+            type="text"
+            value={ obj.value }
+            onChange={ e => onChangeTextBox( e, obj ) }
+          />
+        </div>
+      );
+    }
+    
+    return list;
+  }
+
+  const onChangePosition = e => {
+    if( selectedObject === null ) return;
+
+    const canvas: any = document.getElementById( 'canvas' );
+    const context: any = canvas.getContext( '2d' );
+    context.clearRect(0, 0,  canvas.width, canvas.height );
+
+    const paragraph = selectedObject.text;
+    
+    const x = e.target.id === 'x' ? Number( e.target.value ) : position.x;
+    const y = e.target.id === 'y' ? Number( e.target.value ) : position.y;
+
+    paragraph.reset( x, y );
+
+    const id = selectedObject.id;
+
+    for( let i = 0; i < paragraph.list.length; i++ ) {
+      const text = paragraph.list[ i ];
+  
+      const v: string = text.value;
+      const x: number = text.position.x;
+      const y: number = text.position.y;
+  
+      // フォントを設定する
+      context.font = `${ text.settings.size }px ${ text.settings.font }`;
+      context.fillStyle = text.settings.color;
+  
+      // アウトラインを設定する
+      context.lineWidth = 3;
+      context.strokeStyle = text.settings.outline;
+  
+      // ドロップシャドウを設定する
+      context.shadowBlur = 0;
+      context.shadowOffsetX = 3;
+      context.shadowOffsetY = 1;
+      context.shadowColor = text.settings.outline;
+  
+      // テキストを描画する
+      context.strokeText( v, x, y );
+      context.fillText( v, x, y );
+    }
+
+    const list = preview.updateList( id )
+
+    setPingList( list );
+    setPosition( { x: paragraph.position.x, y: paragraph.position.y } );
   }
 
   return (
@@ -185,11 +354,26 @@ const Container = () => {
             <dd className={ styles.detail }>
               <div>
                 <label htmlFor="textAlignNL" className={ styles.label }>左寄せ</label>
-                <input id="textAlignNL" className={ styles.radio } type="radio" name="text-align-n" onChange={ onChangeRadioNaAlign } defaultChecked />
+                <input
+                  id="textAlignNL"
+                  className={ styles.radio }
+                  type="radio"
+                  name="text-align-n"
+                  value="left"
+                  onChange={ onChangeRadioNaAlign }
+                  defaultChecked
+                />
               </div>
               <div>
                 <label htmlFor="textAlignNC" className={ styles.label }>中央寄せ</label>
-                <input id="textAlignNC" className={ styles.radio } type="radio" name="text-align-n" onChange={ onChangeRadioNaAlign } />
+                <input
+                  id="textAlignNC"
+                  className={ styles.radio }
+                  type="radio"
+                  name="text-align-n"
+                  value="center"
+                  onChange={ onChangeRadioNaAlign }
+                />
               </div>
             </dd>
           </dl>
@@ -197,38 +381,51 @@ const Container = () => {
       </div>
 
       <div className={ styles.main }>
-        <div className={ styles[ 'canvas-holder' ] }>
-          <canvas id="canvas" className={ styles.canvas } width={ CANVAS_WIDTH } height={ CANVAS_HEIGHT }></canvas>
-        </div>
-
-        <div className={ styles.row }>
-          <input id="textPartial" className={ styles.radio } type="text" name="text" onChange={ onChangeTextPartialDraw } />
-          <div className={ styles[ 'input-group' ] }>
-            <label htmlFor="textTypeN" className={ styles.label }>ナレーション</label>
-            <input id="textTypeN" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } defaultChecked />
-          </div>
-          <div className={ styles[ 'input-group' ] }>
-            <label htmlFor="textTypeA" className={ styles.label }>会話A</label>
-            <input id="textTypeA" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
-          </div>
-          <div className={ styles[ 'input-group' ] }>
-            <label htmlFor="textTypeB" className={ styles.label }>会話B</label>
-            <input id="textTypeB" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
-          </div>
-          <div className={ styles[ 'input-group' ] }>
-            <label htmlFor="textTypeC" className={ styles.label }>会話C</label>
-            <input id="textTypeC" className={ styles.radio } type="radio" name="text-type" onChange={ onChangeRadioTextType } />
-          </div>
-        </div>
-
         <div className={ styles.row }>
           <input className={ styles.file } type="file" onChange={ onChangeFile } />
-          <Button className={ styles.button } value="すべてダウンロードする" onClick={ onClickDownloadAll } />
+          <Button className={ styles.button } value="まとめてダウンロード" onClick={ onClickAllDownloadButton } />
         </div>
-      
-        <div className={styles.preview}>{ renderImgList() }</div>
+        <div className={styles.preview}>{ renderPreview() }</div>
       </div>
 
+      <div className={ `${styles.modal}  ${styles[ modalState ]}`}>
+        <div className={ styles[ 'modal-inner' ] } >
+          <div className={ styles[ 'canvas-holder' ] }>
+            <canvas id="canvas" className={ styles.canvas } width={ CANVAS_WIDTH } height={ CANVAS_HEIGHT }></canvas>
+          </div>
+          { renderTextBoxes() }
+          <div className={ styles.row }>
+            <div className={ styles.group }>
+              <label className={ styles.label }>X</label>
+              <input
+                id="x"
+                className={ styles.number }
+                type="number"
+                value={position.x}
+                step="1"
+                onChange={ onChangePosition }
+              />
+            </div>
+            <div className={ styles.group }>
+              <label className={ styles.label }>Y</label>
+              <input
+                id="y"
+                className={ styles.number }
+                type="number"
+                value={position.y}
+                step="1"
+                onChange={ onChangePosition }
+              />
+            </div>
+          </div>
+          <div className={ styles.row }>
+            <Button className={ styles.button } value="ダウンロード" onClick={ onClickDownloadButton } />
+            <Button className={ styles.button } value="閉じる" onClick={ () => setModalState( 'hidden' ) } />
+          </div>
+        </div>
+        <div className={ styles.layer } />
+      </div>
+      
       <Loader visible={ isLoading === true ? 'visible' : 'hidden' } />
     </div>
   );
